@@ -111,9 +111,13 @@ textarea.name-input:focus { border-color: var(--accent); }
 .modum-card-header-title { font-size: 20px; font-weight: 700; color: white; }
 .modum-card-header-count { font-size: 16px; color: rgba(255,255,255,0.85); }
 .modum-card-body { padding: 10px 20px 18px; }
-.student-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 500; color: var(--text); }
+.student-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 20px; font-weight: 500; color: var(--text); cursor: pointer; border-radius: 6px; transition: background 0.12s; user-select: none; }
 .student-row:last-child { border-bottom: none; padding-bottom: 0; }
+.student-row:hover { background: var(--surface2); }
 .student-row .pin-icon { font-size: 15px; color: #aaa; }
+.student-row .leader-star { font-size: 18px; margin-left: auto; opacity: 0; transition: opacity 0.15s, transform 0.15s; transform: scale(0.5); }
+.student-row.is-leader .leader-star { opacity: 1; transform: scale(1); }
+.student-row.is-leader { font-weight: 700; }
 .save-bar { margin-top: 16px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 17px; color: var(--text2); display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow); }
 .save-bar i { color: #1D9E75; font-size: 20px; }
 .save-bar-btn { margin-left: auto; background: var(--accent); color: white; border: none; padding: 10px 22px; border-radius: var(--radius-sm); font-size: 17px; font-family: inherit; cursor: pointer; font-weight: 500; transition: background 0.15s; }
@@ -691,6 +695,7 @@ function generateModum() {
     const classHistory = state.history[state.currentClassId] || [];
     const result = smartShuffle(students, state.modumCount, state.modumSizes, classHistory, state.fixedStudents);
     state.lastResult = result;
+    state.leaders = new Set();
     overlay.classList.remove('show');
     renderResult(result);
     // 결과 탭으로 전환
@@ -708,6 +713,7 @@ function reshuffleModum() {
   const classHistory = state.history[state.currentClassId] || [];
   const result = smartShuffle(students, state.modumCount, state.modumSizes, classHistory, state.fixedStudents);
   state.lastResult = result;
+  state.leaders = new Set(); // 다시 섞으면 모둠장 초기화
   renderResult(result);
 }
 
@@ -735,9 +741,15 @@ function renderResult(result) {
     card.className = 'modum-card';
     const colorClass = COLORS[i % COLORS.length];
     const fixedNames = state.fixedStudents.map(f => f.name);
+    if (!state.leaders) state.leaders = new Set();
     const studentsHtml = group.students.map(s => {
       const isFixed = fixedNames.includes(s);
-      return `<div class="student-row">${isFixed ? '<i class="ti ti-pin pin-icon"></i>' : ''} ${s}</div>`;
+      const isLeader = state.leaders.has(s);
+      return `<div class="student-row${isLeader ? ' is-leader' : ''}" onclick="toggleLeader('${s.replace(/'/g,"\\'")}', this)">
+        ${isFixed ? '<i class="ti ti-pin pin-icon"></i>' : ''}
+        ${s}
+        <span class="leader-star">⭐</span>
+      </div>`;
     }).join('');
     card.innerHTML = `
       <div class="modum-card-header ${colorClass}">
@@ -748,6 +760,20 @@ function renderResult(result) {
     grid.appendChild(card);
     setTimeout(() => card.classList.add('popped'), i * 70);
   });
+}
+
+/* ====================================================
+   모둠장 토글
+==================================================== */
+function toggleLeader(name, el) {
+  if (!state.leaders) state.leaders = new Set();
+  if (state.leaders.has(name)) {
+    state.leaders.delete(name);
+    el.classList.remove('is-leader');
+  } else {
+    state.leaders.add(name);
+    el.classList.add('is-leader');
+  }
 }
 
 /* ====================================================
