@@ -96,41 +96,64 @@ function saveDetailSheet(classId, record) {
 }
 
 // ===== 모둠장 횟수 업데이트 =====
-// J1, N1, R1, V1... 에 반 이름 써두면 자동으로 찾아서 해당 반 횟수 업데이트
-// 패턴: 반이름(col), 이름(col+1), 횟수(col+2), 구분(col+3) → 4칸 간격
+// 시트 구조: J(반+번호) K(횟수) L(이름) | N(반+번호) O(횟수) P(이름) | R S T | V W X
+// "3학년 1반" → "3-1" 로 변환해서 J열에서 클래스 마커 찾기
 function updateLeaderCount(sheet, leaders, className) {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return;
 
-  // row 1 전체 읽어서 반 이름 위치 찾기 (J=10번째 컬럼부터 4칸 간격)
-  const lastCol = sheet.getLastColumn();
-  const headerRow = sheet.getRange(1, 1, 1, Math.max(lastCol, 10)).getValues()[0];
+  // "3학년 1반" → grade=3, classNum=1 → marker="3-1"
+  const gradeMatch = className.match(/(\d+)학년/);
+  const classNumMatch = className.match(/(\d+)반/);
+  if (!gradeMatch || !classNumMatch) return;
+  const grade    = gradeMatch[1];
+  const classNum = classNumMatch[1];
+  const marker   = grade + '-' + classNum; // e.g. "3-1"
 
-  let classCol = -1;
-  for (let c = 9; c < headerRow.length; c += 4) { // J열=index 9, 4칸 간격
-    if (String(headerRow[c]).trim() === String(className).trim()) {
-      classCol = c + 1; // 1-indexed
-      break;
+  // 학년별 컬럼 (1-indexed)
+  // J=10, K=11, L=12 / N=14, O=15, P=16 / R=18, S=19, T=20 / V=22, W=23, X=24
+  const gradeColMap = {
+    '3': {numCol:10, countCol:11, nameCol:12},
+    '4': {numCol:14, countCol:15, nameCol:16},
+    '5': {numCol:18, countCol:19, nameCol:20},
+    '6': {numCol:22, countCol:23, nameCol:24}
+  };
+  const cols = gradeColMap[grade];
+  if (!cols) return;
+
+  // 번호열 전체 읽기
+  const numValues   = sheet.getRange(2, cols.numCol,   lastRow-1, 1).getValues();
+  const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+  const countValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+
+  // marker("3-1") 위치 찾아서 해당 반 row 범위 결정
+  let startIdx = -1;
+  let endIdx   = numValues.length - 1;
+
+  for (let i = 0; i < numValues.length; i++) {
+    const val = String(numValues[i][0]).trim();
+    if (val === marker) {
+      startIdx = i + 1; // 마커 다음 행부터 학생
+    } else if (startIdx > 0 && i >= startIdx) {
+      // 숫자가 아닌 값이 나오면 다음 반 시작 → 종료
+      if (val !== '' && isNaN(Number(val))) {
+        endIdx = i - 1;
+        break;
+      }
     }
   }
-  if (classCol === -1) return; // 해당 반 없으면 종료
+  if (startIdx === -1) return;
 
-  const nameCol  = classCol + 1; // 이름 열
-  const countCol = classCol + 2; // 횟수 열
-
-  // 이름열, 횟수열 읽기
-  const nameValues  = sheet.getRange(2, nameCol,  lastRow-1, 1).getValues();
-  const countValues = sheet.getRange(2, countCol, lastRow-1, 1).getValues();
-
+  // 모둠장 이름 매칭 후 횟수 +1
   leaders.forEach(leaderName => {
-    for (let i = 0; i < nameValues.length; i++) {
+    for (let i = startIdx; i <= endIdx; i++) {
       if (String(nameValues[i][0]).trim() === String(leaderName).trim()) {
         countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
       }
     }
   });
 
-  sheet.getRange(2, countCol, lastRow-1, 1).setValues(countValues);
+  sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(countValues);
 }
 
 // ===== 기록 불러오기 =====
