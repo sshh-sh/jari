@@ -61,16 +61,8 @@ function saveDetailSheet(classId, record) {
     // 결과 헤더 (A1~I1)
     sheet.getRange(1,1,1,9).setValues([resultHeaders]);
     sheet.getRange(1,1,1,9).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
-    // 모둠장 헤더 (J1~M1)
-    sheet.getRange(1,10,1,4).setValues([leaderHeaders]);
-    sheet.getRange(1,11,1,3).setFontWeight('bold').setBackground('#1e3a30').setFontColor('white');
     sheet.setFrozenRows(1);
-    // 컬럼 너비
     for (let i = 4; i <= 9; i++) sheet.setColumnWidth(i, 180);
-    sheet.setColumnWidth(10, 20);  // J: 구분선
-    sheet.setColumnWidth(11, 60);  // K: 번호
-    sheet.setColumnWidth(12, 100); // L: 이름
-    sheet.setColumnWidth(13, 100); // M: 모둠장 횟수
   }
 
   const className = record.className || classId;
@@ -99,29 +91,46 @@ function saveDetailSheet(classId, record) {
 
   // 모둠장 횟수 업데이트 (L열에 이름 있으면 M열 자동 갱신)
   if (record.leaders && record.leaders.length > 0) {
-    updateLeaderCount(sheet, record.leaders);
+    updateLeaderCount(sheet, record.leaders, className);
   }
 }
 
-// ===== 모둠장 횟수 업데이트 (L열 이름 기준으로 M열 갱신) =====
-function updateLeaderCount(sheet, leaders) {
+// ===== 모둠장 횟수 업데이트 =====
+// J1, N1, R1, V1... 에 반 이름 써두면 자동으로 찾아서 해당 반 횟수 업데이트
+// 패턴: 반이름(col), 이름(col+1), 횟수(col+2), 구분(col+3) → 4칸 간격
+function updateLeaderCount(sheet, leaders, className) {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return;
 
-  // L열(12번째) 전체 읽기
-  const nameRange = sheet.getRange(2, 12, lastRow-1, 1).getValues(); // L열: 이름
-  const countRange = sheet.getRange(2, 13, lastRow-1, 1).getValues(); // M열: 횟수
+  // row 1 전체 읽어서 반 이름 위치 찾기 (J=10번째 컬럼부터 4칸 간격)
+  const lastCol = sheet.getLastColumn();
+  const headerRow = sheet.getRange(1, 1, 1, Math.max(lastCol, 10)).getValues()[0];
+
+  let classCol = -1;
+  for (let c = 9; c < headerRow.length; c += 4) { // J열=index 9, 4칸 간격
+    if (String(headerRow[c]).trim() === String(className).trim()) {
+      classCol = c + 1; // 1-indexed
+      break;
+    }
+  }
+  if (classCol === -1) return; // 해당 반 없으면 종료
+
+  const nameCol  = classCol + 1; // 이름 열
+  const countCol = classCol + 2; // 횟수 열
+
+  // 이름열, 횟수열 읽기
+  const nameValues  = sheet.getRange(2, nameCol,  lastRow-1, 1).getValues();
+  const countValues = sheet.getRange(2, countCol, lastRow-1, 1).getValues();
 
   leaders.forEach(leaderName => {
-    for (let i = 0; i < nameRange.length; i++) {
-      if (nameRange[i][0] === leaderName) {
-        countRange[i][0] = (countRange[i][0] || 0) + 1;
+    for (let i = 0; i < nameValues.length; i++) {
+      if (String(nameValues[i][0]).trim() === String(leaderName).trim()) {
+        countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
       }
     }
   });
 
-  // M열 업데이트
-  sheet.getRange(2, 13, lastRow-1, 1).setValues(countRange);
+  sheet.getRange(2, countCol, lastRow-1, 1).setValues(countValues);
 }
 
 // ===== 기록 불러오기 =====
