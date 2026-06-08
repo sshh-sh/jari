@@ -1,23 +1,15 @@
 /**
  * 🎲 모둠뽑기 - Google Apps Script 백엔드
- * 스프레드시트에 배치 결과를 저장/불러오는 역할을 합니다.
- *
- * 사용 방법:
- * 1. Google 스프레드시트 새로 만들기
- * 2. 확장 프로그램 → Apps Script
- * 3. 이 코드 전체를 붙여넣기
- * 4. 저장 → 배포 → 새 배포 → 웹앱으로 배포
- * 5. 액세스 권한: '모든 사용자' 설정
- * 6. 배포 URL을 복사해서 앱의 'Google 저장소 연결'에 붙여넣기
  */
 
-const SHEET_NAME = '모둠기록';
+const SHEET_NAME   = '모둠기록';      // 앱 내부용 (JSON 원본)
+const SHEET_DETAIL = '모둠기록_보기'; // 보기 좋은 형태
 
 // ===== 웹앱 진입점 =====
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
-    const action = data.action;
+    const data    = JSON.parse(e.postData.contents);
+    const action  = data.action;
     const classId = data.classId;
     const payload = data.data;
 
@@ -61,6 +53,7 @@ function saveRecord(classId, record) {
         record.date,
         JSON.stringify(record.groups)
       ]]);
+      saveDetailSheet(classId, record);
       return {success: true, message: '기존 기록 업데이트 완료'};
     }
   }
@@ -74,13 +67,64 @@ function saveRecord(classId, record) {
     JSON.stringify(record.groups)
   ]);
 
+  saveDetailSheet(classId, record);
   return {success: true, message: '저장 완료'};
+}
+
+// ===== 보기 좋은 시트에 저장 =====
+function saveDetailSheet(classId, record) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_DETAIL);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_DETAIL);
+    const headers = ['반', '년도', '월', '모둠명', '학생 명단'];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, headers.length)
+      .setFontWeight('bold')
+      .setBackground('#534AB7')
+      .setFontColor('white');
+    sheet.setColumnWidth(5, 350);
+  }
+
+  // 반 이름 (className 없으면 classId 그대로)
+  const className = record.className || classId;
+
+  // 같은 반+월 기존 행 삭제
+  const existing = sheet.getDataRange().getValues();
+  const toDelete = [];
+  for (let i = existing.length - 1; i >= 1; i--) {
+    if (existing[i][0] === className && existing[i][1] === record.year && existing[i][2] === record.month) {
+      toDelete.push(i + 1);
+    }
+  }
+  toDelete.forEach(row => sheet.deleteRow(row));
+
+  // 모둠별로 한 행씩 추가
+  record.groups.forEach((group, i) => {
+    sheet.appendRow([
+      className,
+      record.year,
+      record.month,
+      group.name,
+      group.students.join(', ')
+    ]);
+  });
+
+  // 모둠별 번갈아 배경색 (가독성)
+  const lastRow = sheet.getLastRow();
+  const startRow = lastRow - record.groups.length + 1;
+  record.groups.forEach((group, i) => {
+    const color = i % 2 === 0 ? '#f0effe' : '#ffffff';
+    sheet.getRange(startRow + i, 1, 1, 5).setBackground(color);
+  });
 }
 
 // ===== 기록 불러오기 =====
 function loadRecords(classId) {
   const sheet = getOrCreateSheet();
-  const data = sheet.getDataRange().getValues();
+  const data  = sheet.getDataRange().getValues();
   const records = [];
 
   for (let i = 1; i < data.length; i++) {
@@ -108,7 +152,10 @@ function getOrCreateSheet() {
     sheet = ss.insertSheet(SHEET_NAME);
     sheet.getRange(1, 1, 1, 5).setValues([['반 ID', '년도', '월', '날짜', '모둠 데이터(JSON)']]);
     sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, 5).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.getRange(1, 1, 1, 5)
+      .setFontWeight('bold')
+      .setBackground('#534AB7')
+      .setFontColor('white');
     sheet.setColumnWidth(5, 400);
   }
 
