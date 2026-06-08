@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 모둠뽑기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+/* ===== 리셋 & 기본 ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f4f6;
+  --surface: #ffffff;
+  --surface2: #f0f0f3;
+  --border: #e2e2e8;
+  --text: #1a1a2e;
+  --text2: #6b6b80;
+  --accent: #534AB7;
+  --accent-light: #EEEDFE;
+  --accent-dark: #3c3489;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  font-family: 'Noto Sans KR', sans-serif;
+}
+body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ===== 레이아웃 ===== */
+.app { max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+.logo-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.logo-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.class-selector { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 14px; font-size: 13px; color: var(--text); cursor: pointer; box-shadow: var(--shadow); position: relative; }
+.class-selector select { border: none; background: none; font-family: inherit; font-size: 13px; color: var(--text); cursor: pointer; outline: none; padding-right: 4px; }
+
+/* ===== 탭 ===== */
+.tabbar { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 20px; box-shadow: var(--shadow); }
+.tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all 0.18s; border: none; background: none; font-family: inherit; }
+.tab.active { background: var(--accent); color: white; box-shadow: 0 2px 8px rgba(83,74,183,0.3); }
+.tab-spacer { flex: 1; }
+.key-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; font-size: 16px; transition: all 0.18s; }
+.key-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+
+/* ===== 카드 ===== */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+.card-title { font-size: 13px; font-weight: 500; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.card-title i { color: var(--accent); font-size: 15px; }
+
+/* ===== 설정 탭 ===== */
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+textarea.name-input { width: 100%; height: 200px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 1.8; outline: none; transition: border-color 0.15s; }
+textarea.name-input:focus { border-color: var(--accent); }
+.input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.input-count { font-size: 12px; color: var(--text2); }
+.upload-btn { font-size: 12px; color: var(--accent); background: none; border: 1px solid var(--accent); padding: 4px 11px; border-radius: 6px; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px; transition: all 0.15s; }
+.upload-btn:hover { background: var(--accent-light); }
+.counter-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.counter-group label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+.counter { display: flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); }
+.counter button { width: 34px; height: 34px; border: none; background: none; cursor: pointer; font-size: 18px; color: var(--text); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+.counter button:hover { background: var(--border); }
+.counter-val { width: 44px; text-align: center; font-size: 14px; font-weight: 700; color: var(--text); background: var(--surface); padding: 6px 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+.total-badge { font-size: 12px; background: var(--surface2); color: var(--text2); padding: 6px 12px; border-radius: 6px; margin-top: 16px; border: 1px solid var(--border); }
+.modum-per-section { margin-top: 12px; }
+.modum-per-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 8px; }
+.modum-per-list { display: flex; flex-direction: column; gap: 0; }
+.modum-per-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.modum-per-row:last-child { border-bottom: none; }
+.modum-per-name { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); }
+.modum-dot { width: 10px; height: 10px; border-radius: 50%; }
+.counter.sm .counter-val { width: 36px; font-size: 13px; }
+.counter.sm button { width: 28px; height: 28px; font-size: 15px; }
+
+/* ===== 생성 버튼 ===== */
+.generate-btn { width: 100%; padding: 15px; border-radius: var(--radius); background: var(--accent); color: white; border: none; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 16px rgba(83,74,183,0.35); transition: all 0.18s; }
+.generate-btn:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(83,74,183,0.4); }
+.generate-btn:active { transform: translateY(0); }
+
+/* ===== 로딩 오버레이 ===== */
+#loading-overlay { display: none; position: fixed; inset: 0; background: var(--accent); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
+#loading-overlay.show { display: flex; }
+.loading-dice { font-size: 72px; animation: diceBounce 0.65s ease-in-out infinite alternate; }
+@keyframes diceBounce { from { transform: translateY(0) rotate(-8deg); } to { transform: translateY(-18px) rotate(8deg); } }
+.loading-text { font-size: 32px; font-weight: 700; color: white; text-align: center; line-height: 1.5; }
+.loading-sub { font-size: 16px; color: rgba(255,255,255,0.7); }
+.loading-spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.25); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== 결과 탭 ===== */
+.result-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.result-title { font-size: 18px; font-weight: 700; color: var(--text); }
+.result-meta { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.result-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.action-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: all 0.15s; font-weight: 500; }
+.action-btn:hover { background: var(--surface2); }
+.action-btn.primary { background: var(--accent); color: white; border-color: transparent; box-shadow: 0 2px 8px rgba(83,74,183,0.25); }
+.action-btn.primary:hover { background: var(--accent-dark); }
+.chalkboard-bar { background: #1e3a30; border-radius: var(--radius-sm); padding: 10px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; color: #7ec8a8; font-size: 13px; }
+.chalkboard-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ecb8d; flex-shrink: 0; }
+.modum-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.modum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); opacity: 0; }
+@keyframes cardPop { 0% { opacity: 0; transform: scale(0.88) translateY(14px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+.modum-card.popped { animation: cardPop 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+.modum-card-header { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.modum-card-header-title { font-size: 15px; font-weight: 700; color: white; }
+.modum-card-header-count { font-size: 12px; color: rgba(255,255,255,0.8); }
+.modum-card-body { padding: 8px 16px 14px; }
+.student-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 500; color: var(--text); }
+.student-row:last-child { border-bottom: none; padding-bottom: 0; }
+.student-row .pin-icon { font-size: 12px; color: #aaa; }
+.save-bar { margin-top: 16px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow); }
+.save-bar i { color: #1D9E75; font-size: 16px; }
+.save-bar-btn { margin-left: auto; background: var(--accent); color: white; border: none; padding: 7px 16px; border-radius: var(--radius-sm); font-size: 13px; font-family: inherit; cursor: pointer; font-weight: 500; transition: background 0.15s; }
+.save-bar-btn:hover { background: var(--accent-dark); }
+
+/* ===== 모달 ===== */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; padding: 16px; }
+.modal-backdrop.show { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.modal-title i { color: var(--accent); }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 20px; display: flex; padding: 2px; }
+.inner-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 20px; }
+.inner-tab { padding: 10px 16px; font-size: 13px; font-family: inherit; cursor: pointer; color: var(--text2); border: none; background: none; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 5px; transition: all 0.15s; }
+.inner-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+.modal-body { padding: 18px 20px; }
+.history-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.history-row:last-child { border-bottom: none; }
+.history-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.history-detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.history-view-btn { font-size: 12px; color: var(--accent); background: none; border: 1px solid #AFA9EC; padding: 4px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.info-box { margin-top: 12px; padding: 10px 12px; background: var(--surface2); border-radius: var(--radius-sm); font-size: 12px; color: var(--text2); display: flex; gap: 7px; }
+.fixed-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
+.fixed-table th { text-align: left; padding: 7px 8px; font-size: 12px; font-weight: 500; color: var(--text2); border-bottom: 1px solid var(--border); }
+.fixed-table td { padding: 9px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+.fixed-table tr:last-child td { border-bottom: none; }
+.badge { display: inline-flex; align-items: center; font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 500; }
+.badge-purple { background: var(--accent-light); color: var(--accent-dark); }
+.badge-green { background: #e6f5ee; color: #0e6b43; }
+.badge-orange { background: #fdf0e7; color: #7a3810; }
+.add-fixed-btn { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--accent); background: none; border: 1px dashed var(--accent); padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; width: 100%; justify-content: center; transition: background 0.15s; margin-top: 4px; }
+.add-fixed-btn:hover { background: var(--accent-light); }
+
+/* ===== 반 관리 모달 ===== */
+.class-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.class-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface2); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 14px; cursor: pointer; transition: all 0.15s; }
+.class-item:hover { border-color: var(--accent); }
+.class-item.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent-dark); font-weight: 500; }
+.add-class-row { display: flex; gap: 8px; }
+.add-class-input { flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; color: var(--text); background: var(--surface2); outline: none; }
+.add-class-input:focus { border-color: var(--accent); }
+.add-class-confirm { padding: 9px 16px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; cursor: pointer; font-weight: 500; }
+
+/* ===== 숨김 ===== */
+.page { display: none; }
+.page.active { display: block; }
+#inner-fixed { display: none; }
+
+/* ===== 반응형 ===== */
+@media (max-width: 640px) {
+  .setup-grid { grid-template-columns: 1fr; }
+  .modum-grid { grid-template-columns: repeat(2, 1fr); }
+  .result-header { flex-direction: column; }
+}
+
+/* ===== 모둠 색상 ===== */
+.mc0{background:#534AB7} .mc1{background:#0F6E56} .mc2{background:#993C1D}
+.mc3{background:#185FA5} .mc4{background:#3B6D11} .mc5{background:#854F0B}
+.mc6{background:#6B2D82} .mc7{background:#1A6B6B} .mc8{background:#8B3A3A} .mc9{background:#2D5A8B}
+
+/* ===== 결과 인쇄 영역 ===== */
+@media print {
+  body { background: white; }
+  .topbar, .tabbar, .save-bar, .result-actions, .chalkboard-bar { display: none !important; }
+  .modum-grid { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로딩 오버레이 -->
+<div id="loading-overlay">
+  <div class="loading-dice">🎲</div>
+  <div class="loading-text">우리 반 최적의<br>모둠 조합<br>찾는 중...</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-sub">지난 달 기록 확인 중이에요!</div>
+</div>
+
+<!-- 선생님 전용 모달 -->
+<div class="modal-backdrop" id="teacher-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-key"></i> 선생님 전용</div>
+      <button class="modal-close" onclick="closeModal('teacher-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="inner-tabs">
+      <button class="inner-tab active" onclick="switchInner('history',this)"><i class="ti ti-history"></i> 과거 배치 기록</button>
+      <button class="inner-tab" onclick="switchInner('fixed',this)"><i class="ti ti-pin"></i> 고정 학생 설정</button>
+    </div>
+    <div class="modal-body" id="inner-history">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">지난 배치 기록을 참고해 이번 달 모둠이 겹치지 않게 구성됩니다.</div>
+      <div id="history-list">
+        <div style="font-size:13px;color:var(--text2);text-align:center;padding:20px">저장된 기록이 없습니다.</div>
+      </div>
+      <div class="info-box"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:15px"></i> 3월에 자동 초기화되며, 최대 12개월치 기록이 유지됩니다.</div>
+    </div>
+    <div class="modal-body" id="inner-fixed">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px">특별 지도가 필요한 학생을 특정 모둠에 고정합니다. 아이들에게 보이지 않아요.</div>
+      <table class="fixed-table">
+        <thead><tr><th>학생 이름</th><th>고정 모둠</th><th>사유</th><th></th></tr></thead>
+        <tbody id="fixed-tbody"></tbody>
+      </table>
+      <button class="add-fixed-btn" onclick="addFixedRow()"><i class="ti ti-plus"></i> 고정 학생 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 반 관리 모달 -->
+<div class="modal-backdrop" id="class-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-school"></i> 반 선택 / 추가</div>
+      <button class="modal-close" onclick="closeModal('class-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="class-list" id="class-list"></div>
+      <div class="add-class-row">
+        <input class="add-class-input" id="new-class-input" placeholder="예: 3학년 2반" onkeydown="if(event.key==='Enter')addNewClass()">
+        <button class="add-class-confirm" onclick="addNewClass()">추가</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAS URL 설정 모달 -->
+<div class="modal-backdrop" id="gas-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-cloud"></i> Google 저장소 연결</div>
+      <button class="modal-close" onclick="closeModal('gas-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.7">
+        Google Apps Script를 배포하고 생성된 <strong>웹앱 URL</strong>을 아래에 붙여넣으세요.<br>
+        설정 후 데이터가 Google 스프레드시트에 자동 저장됩니다.
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px">GAS 웹앱 URL</label>
+        <input id="gas-url-input" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;color:var(--text);background:var(--surface2);outline:none" placeholder="https://script.google.com/macros/s/..." />
+      </div>
+      <button onclick="saveGasUrl()" style="width:100%;padding:11px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">저장하고 연결하기</button>
+      <div class="info-box" style="margin-top:10px"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:15px"></i> GAS 배포 방법은 함께 제공된 안내서를 참고하세요.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 앱 본체 -->
+<div class="app">
+  <!-- 상단바 -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon"><i class="ti ti-layout-grid"></i></div>
+      <div>
+        <div class="logo-title">🎲 모둠뽑기</div>
+        <div class="logo-sub">이번 달 내 자리는 어디일까요?</div>
+      </div>
+    </div>
+    <div class="class-selector" onclick="openModal('class-modal')">
+      <i class="ti ti-school" style="font-size:15px;color:var(--text2)"></i>
+      <span id="current-class-label">반을 선택하세요</span>
+      <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text2)"></i>
+    </div>
+  </div>
+
+  <!-- 탭바 -->
+  <div class="tabbar">
+    <button class="tab active" onclick="switchTab('setup',this)"><i class="ti ti-settings"></i> 설정</button>
+    <button class="tab" onclick="switchTab('result',this)"><i class="ti ti-layout-board"></i> 결과</button>
+    <div class="tab-spacer"></div>
+    <button class="key-btn" onclick="openModal('teacher-modal')" title="선생님 전용"><i class="ti ti-key"></i></button>
+  </div>
+
+  <!-- 설정 탭 -->
+  <div class="page active" id="page-setup">
+    <div class="setup-grid">
+      <!-- 명렬표 -->
+      <div class="card">
+        <div class="card-title"><i class="ti ti-users"></i> 학생 명렬표</div>
+        <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()"></textarea>
+        <div class="input-footer">
+          <span class="input-count" id="name-count">0명 입력됨</span>
+          <label class="upload-btn"><i class="ti ti-upload"></i> 엑셀 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)"></label>
+        </div>
+      </div>
+
+      <!-- 모둠 설정 -->
+      <div class="card">
+        <div class="card-title"><i class="ti ti-adjustments-horizontal"></i> 모둠 설정</div>
+        <div class="counter-row">
+          <div class="counter-group">
+            <label>모둠 수</label>
+            <div class="counter">
+              <button onclick="changeModum(-1)">−</button>
+              <div class="counter-val" id="modum-count-val">6</div>
+              <button onclick="changeModum(1)">+</button>
+            </div>
+          </div>
+          <div class="total-badge" id="total-badge">총 0명 · 6모둠</div>
+        </div>
+        <div class="modum-per-section">
+          <div class="modum-per-label">모둠별 인원수 (개별 설정)</div>
+          <div class="modum-per-list" id="modum-per-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAS 연결 상태 -->
+    <div style="margin-bottom:16px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow)">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+        <i class="ti ti-cloud" style="color:var(--text2)"></i>
+        <span id="gas-status-text" style="color:var(--text2)">Google 저장소 미연결</span>
+      </div>
+      <button onclick="openModal('gas-modal')" style="font-size:12px;color:var(--accent);background:none;border:1px solid var(--accent);padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">연결 설정</button>
+    </div>
+
+    <button class="generate-btn" onclick="generateModum()">
+      <i class="ti ti-sparkles"></i>
+      <span id="generate-btn-text">6월 모둠을 뽑아주세요!</span>
+    </button>
+  </div>
+
+  <!-- 결과 탭 -->
+  <div class="page" id="page-result">
+    <div class="chalkboard-bar">
+      <div class="chalkboard-dot"></div>
+      <div id="chalkboard-info">배치 결과가 여기에 표시됩니다.</div>
+    </div>
+    <div class="result-header">
+      <div>
+        <div class="result-title" id="result-title">결과 대기 중</div>
+        <div class="result-meta" id="result-meta"></div>
+      </div>
+      <div class="result-actions">
+        <button class="action-btn" onclick="reshuffleModum()"><i class="ti ti-refresh"></i> 다시 섞기</button>
+        <button class="action-btn" onclick="window.print()"><i class="ti ti-printer"></i> 인쇄</button>
+        <button class="action-btn primary" onclick="saveAsPng()"><i class="ti ti-download"></i> PNG 저장</button>
+      </div>
+    </div>
+    <div class="modum-grid" id="modum-grid"></div>
+    <div class="save-bar">
+      <i class="ti ti-check"></i>
+      이 결과를 저장하면 다음 달 배치 시 자동으로 참고합니다.
+      <button class="save-bar-btn" onclick="saveResult()">결과 저장하기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====================================================
+   전역 상태
+==================================================== */
+const COLORS = ['mc0','mc1','mc2','mc3','mc4','mc5','mc6','mc7','mc8','mc9'];
+const COLOR_HEX = ['#534AB7','#0F6E56','#993C1D','#185FA5','#3B6D11','#854F0B','#6B2D82','#1A6B6B','#8B3A3A','#2D5A8B'];
+
+let state = {
+  classes: [],          // [{id, name}]
+  currentClassId: null,
+  modumCount: 6,
+  modumSizes: [4,4,4,4,4,4],
+  fixedStudents: [],    // [{name, modumIdx, reason}]
+  history: {},          // {classId: [{month, year, groups:[{name,[students]}]}]}
+  lastResult: null,     // 마지막 배치 결과
+  gasUrl: '',
+};
+
+/* ====================================================
+   로컬스토리지 저장/불러오기
+==================================================== */
+function saveState() {
+  localStorage.setItem('modum_state', JSON.stringify(state));
+}
+function loadState() {
+  const saved = localStorage.getItem('modum_state');
+  if (saved) {
+    try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
+  }
+  // 3월 초기화 로직
+  const now = new Date();
+  if (now.getMonth() === 2) { // 3월
+    const lastReset = localStorage.getItem('modum_last_reset');
+    const thisYear = String(now.getFullYear());
+    if (lastReset !== thisYear) {
+      if (state.currentClassId && state.history[state.currentClassId]) {
+        state.history[state.currentClassId] = [];
+      }
+      localStorage.setItem('modum_last_reset', thisYear);
+      saveState();
+    }
+  }
+}
+
+/* ====================================================
+   초기화
+==================================================== */
+window.addEventListener('DOMContentLoaded', () => {
+  loadState();
+  if (!state.classes.length) {
+    state.classes = [{id: 'c1', name: '3학년 1반'}];
+    state.currentClassId = 'c1';
+    saveState();
+  }
+  if (!state.currentClassId) state.currentClassId = state.classes[0].id;
+  renderAll();
+  updateGenerateBtnText();
+
+  // GAS URL
+  if (state.gasUrl) {
+    document.getElementById('gas-url-input').value = state.gasUrl;
+    document.getElementById('gas-status-text').textContent = 'Google 저장소 연결됨 ✓';
+    document.getElementById('gas-status-text').style.color = '#1D9E75';
+  }
+});
+
+function renderAll() {
+  renderClassLabel();
+  renderClassList();
+  renderModumPerList();
+  renderHistory();
+  renderFixedTable();
+  updateCount();
+  updateTotalBadge();
+  // 저장된 명렬표 불러오기
+  const cls = getCurrentClass();
+  if (cls && cls.students) {
+    document.getElementById('name-input').value = cls.students;
+    updateCount();
+  }
+}
+
+/* ====================================================
+   반 관리
+==================================================== */
+function getCurrentClass() {
+  return state.classes.find(c => c.id === state.currentClassId) || null;
+}
+function renderClassLabel() {
+  const cls = getCurrentClass();
+  document.getElementById('current-class-label').textContent = cls ? cls.name : '반을 선택하세요';
+}
+function renderClassList() {
+  const list = document.getElementById('class-list');
+  list.innerHTML = '';
+  state.classes.forEach(cls => {
+    const div = document.createElement('div');
+    div.className = 'class-item' + (cls.id === state.currentClassId ? ' selected' : '');
+    div.innerHTML = `<span>${cls.name}</span><i class="ti ti-check" style="display:${cls.id===state.currentClassId?'block':'none'};color:var(--accent)"></i>`;
+    div.onclick = () => selectClass(cls.id);
+    list.appendChild(div);
+  });
+}
+function selectClass(id) {
+  // 현재 반 명렬표 저장
+  saveCurrentStudents();
+  state.currentClassId = id;
+  // 해당 반 모둠 설정 불러오기
+  const cls = getCurrentClass();
+  if (cls) {
+    if (cls.modumCount) { state.modumCount = cls.modumCount; document.getElementById('modum-count-val').textContent = state.modumCount; }
+    if (cls.modumSizes) state.modumSizes = cls.modumSizes;
+  }
+  saveState();
+  renderAll();
+  closeModal('class-modal');
+}
+function addNewClass() {
+  const input = document.getElementById('new-class-input');
+  const name = input.value.trim();
+  if (!name) return;
+  const id = 'c' + Date.now();
+  state.classes.push({id, name});
+  saveState();
+  renderClassList();
+  input.value = '';
+}
+function saveCurrentStudents() {
+  const cls = getCurrentClass();
+  if (cls) {
+    cls.students = document.getElementById('name-input').value;
+    cls.modumCount = state.modumCount;
+    cls.modumSizes = [...state.modumSizes];
+    saveState();
+  }
+}
+
+/* ====================================================
+   명렬표
+==================================================== */
+function getStudents() {
+  return document.getElementById('name-input').value
+    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
+}
+function updateCount() {
+  const n = getStudents().length;
+  document.getElementById('name-count').textContent = `${n}명 입력됨`;
+  updateTotalBadge();
+}
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  // CSV 처리 (간단 파싱)
+  if (file.name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const lines = ev.target.result.split('\n').map(l => l.split(',')[0].replace(/"/g,'').trim()).filter(Boolean);
+      document.getElementById('name-input').value = lines.join('\n');
+      updateCount();
+    };
+    reader.readAsText(file, 'UTF-8');
+  } else {
+    alert('CSV 파일 또는 붙여넣기를 사용해 주세요.\n(엑셀에서 다른 이름으로 저장 → CSV 형식 선택)');
+  }
+}
+
+/* ====================================================
+   모둠 설정
+==================================================== */
+function changeModum(delta) {
+  state.modumCount = Math.max(2, Math.min(10, state.modumCount + delta));
+  while (state.modumSizes.length < state.modumCount) state.modumSizes.push(4);
+  document.getElementById('modum-count-val').textContent = state.modumCount;
+  renderModumPerList();
+  updateTotalBadge();
+}
+function changeSize(idx, delta) {
+  state.modumSizes[idx] = Math.max(1, Math.min(15, (state.modumSizes[idx]||4) + delta));
+  document.getElementById(`msize-${idx}`).textContent = state.modumSizes[idx];
+  updateTotalBadge();
+}
+function renderModumPerList() {
+  const list = document.getElementById('modum-per-list');
+  list.innerHTML = '';
+  for (let i = 0; i < state.modumCount; i++) {
+    const row = document.createElement('div');
+    row.className = 'modum-per-row';
+    row.innerHTML = `
+      <div class="modum-per-name">
+        <div class="modum-dot" style="background:${COLOR_HEX[i%COLOR_HEX.length]}"></div>
+        ${i+1}모둠
+      </div>
+      <div class="counter sm">
+        <button onclick="changeSize(${i},-1)">−</button>
+        <div class="counter-val" id="msize-${i}">${state.modumSizes[i]||4}</div>
+        <button onclick="changeSize(${i},1)">+</button>
+      </div>`;
+    list.appendChild(row);
+  }
+}
+function updateTotalBadge() {
+  const students = getStudents().length;
+  const total = state.modumSizes.slice(0, state.modumCount).reduce((a,b) => a+(b||4), 0);
+  const badge = document.getElementById('total-badge');
+  badge.textContent = `총 ${students}명 입력됨 · 배치 ${total}자리`;
+  badge.style.color = students !== total ? '#e05a2b' : 'var(--text2)';
+}
+
+/* ====================================================
+   스마트 랜덤 알고리즘
+==================================================== */
+function smartShuffle(students, modumCount, modumSizes, history, fixedStudents) {
+  // 고정 학생 배정
+  const groups = Array.from({length: modumCount}, (_, i) => ({
+    idx: i,
+    name: `${i+1}모둠`,
+    students: [],
+    maxSize: modumSizes[i] || 4
+  }));
+
+  const remaining = [...students];
+  const fixed = [];
+
+  fixedStudents.forEach(f => {
+    const idx = f.modumIdx;
+    if (idx >= 0 && idx < modumCount && remaining.includes(f.name)) {
+      groups[idx].students.push(f.name);
+      remaining.splice(remaining.indexOf(f.name), 1);
+      fixed.push(f.name);
+    }
+  });
+
+  // 과거 기록에서 같은 모둠이었던 쌍 추출
+  const pastPairs = new Set();
+  if (history && history.length) {
+    history.forEach(record => {
+      record.groups.forEach(g => {
+        const members = g.students;
+        for (let i = 0; i < members.length; i++) {
+          for (let j = i+1; j < members.length; j++) {
+            pastPairs.add([members[i],members[j]].sort().join('|'));
+          }
+        }
+      });
+    });
+  }
+
+  // 겹침 점수 계산 함수
+  function overlapScore(groupStudents, candidate) {
+    let score = 0;
+    groupStudents.forEach(s => {
+      const pair = [s, candidate].sort().join('|');
+      if (pastPairs.has(pair)) score++;
+    });
+    return score;
+  }
+
+  // 셔플 후 배정
+  let shuffled = [...remaining].sort(() => Math.random() - 0.5);
+
+  // 최대 5번 재시도로 겹침 최소화
+  let bestAssignment = null;
+  let bestScore = Infinity;
+
+  for (let attempt = 0; attempt < 100; attempt++) {
+    shuffled = [...remaining].sort(() => Math.random() - 0.5);
+    const tempGroups = groups.map(g => ({...g, students: [...g.students]}));
+    let totalOverlap = 0;
+
+    for (const student of shuffled) {
+      // 아직 자리가 있는 모둠들 중 겹침이 가장 적은 곳 배정
+      const available = tempGroups.filter(g => g.students.length < g.maxSize);
+      if (!available.length) break;
+      available.sort((a, b) => overlapScore(a.students, student) - overlapScore(b.students, student));
+      const best = available[0];
+      totalOverlap += overlapScore(best.students, student);
+      best.students.push(student);
+    }
+
+    if (totalOverlap < bestScore) {
+      bestScore = totalOverlap;
+      bestAssignment = tempGroups.map(g => ({...g}));
+      if (bestScore === 0) break;
+    }
+  }
+
+  return {groups: bestAssignment || groups, overlapCount: bestScore};
+}
+
+/* ====================================================
+   모둠 생성
+==================================================== */
+function updateGenerateBtnText() {
+  const month = new Date().getMonth() + 1;
+  document.getElementById('generate-btn-text').textContent = `${month}월 모둠을 뽑아주세요!`;
+}
+
+function generateModum() {
+  const students = getStudents();
+  if (students.length < 2) { alert('학생 이름을 먼저 입력해 주세요!'); return; }
+  saveCurrentStudents();
+
+  const overlay = document.getElementById('loading-overlay');
+  overlay.classList.add('show');
+
+  setTimeout(() => {
+    const classHistory = state.history[state.currentClassId] || [];
+    const result = smartShuffle(students, state.modumCount, state.modumSizes, classHistory, state.fixedStudents);
+    state.lastResult = result;
+    overlay.classList.remove('show');
+    renderResult(result);
+    // 결과 탭으로 전환
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    const tabs = document.querySelectorAll('.tab');
+    tabs[1].classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-result').classList.add('active');
+  }, 2200);
+}
+
+function reshuffleModum() {
+  const students = getStudents();
+  if (!students.length) return;
+  const classHistory = state.history[state.currentClassId] || [];
+  const result = smartShuffle(students, state.modumCount, state.modumSizes, classHistory, state.fixedStudents);
+  state.lastResult = result;
+  renderResult(result);
+}
+
+/* ====================================================
+   결과 렌더링
+==================================================== */
+function renderResult(result) {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const cls = getCurrentClass();
+  const clsName = cls ? cls.name : '';
+  const totalStudents = result.groups.reduce((a, g) => a + g.students.length, 0);
+
+  document.getElementById('chalkboard-info').innerHTML =
+    `<strong style="color:#7ec8a8">${clsName}</strong> &nbsp;·&nbsp; ${year}년 ${month}월 모둠 배치 &nbsp;·&nbsp; 과거 기록 반영 완료`;
+  document.getElementById('result-title').textContent = `${month}월 모둠 배치 결과 🎉`;
+  document.getElementById('result-meta').textContent =
+    `${result.groups.length}모둠 · 총 ${totalStudents}명 · 겹침 ${result.overlapCount}건`;
+
+  const grid = document.getElementById('modum-grid');
+  grid.innerHTML = '';
+  result.groups.forEach((group, i) => {
+    const card = document.createElement('div');
+    card.className = 'modum-card';
+    const colorClass = COLORS[i % COLORS.length];
+    const fixedNames = state.fixedStudents.map(f => f.name);
+    const studentsHtml = group.students.map(s => {
+      const isFixed = fixedNames.includes(s);
+      return `<div class="student-row">${isFixed ? '<i class="ti ti-pin pin-icon"></i>' : ''} ${s}</div>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="modum-card-header ${colorClass}">
+        <span class="modum-card-header-title">${group.name}</span>
+        <span class="modum-card-header-count">${group.students.length}명</span>
+      </div>
+      <div class="modum-card-body">${studentsHtml}</div>`;
+    grid.appendChild(card);
+    setTimeout(() => card.classList.add('popped'), i * 70);
+  });
+}
+
+/* ====================================================
+   결과 저장
+==================================================== */
+function saveResult() {
+  if (!state.lastResult) { alert('먼저 모둠을 뽑아주세요!'); return; }
+  const now = new Date();
+  const record = {
+    month: now.getMonth() + 1,
+    year: now.getFullYear(),
+    date: now.toLocaleDateString('ko-KR'),
+    groups: state.lastResult.groups
+  };
+  if (!state.history[state.currentClassId]) state.history[state.currentClassId] = [];
+  // 같은 월 기록 덮어쓰기
+  const idx = state.history[state.currentClassId].findIndex(r => r.month === record.month && r.year === record.year);
+  if (idx >= 0) state.history[state.currentClassId][idx] = record;
+  else state.history[state.currentClassId].push(record);
+  // 최대 12개 유지
+  state.history[state.currentClassId] = state.history[state.currentClassId].slice(-12);
+  saveState();
+  // GAS에도 저장
+  if (state.gasUrl) sendToGas('save', record);
+  renderHistory();
+  alert('✅ 저장되었습니다!\n다음 달 배치에 자동으로 반영됩니다.');
+}
+
+/* ====================================================
+   GAS 연동
+==================================================== */
+function saveGasUrl() {
+  const url = document.getElementById('gas-url-input').value.trim();
+  if (!url) { alert('URL을 입력해 주세요.'); return; }
+  state.gasUrl = url;
+  saveState();
+  document.getElementById('gas-status-text').textContent = 'Google 저장소 연결됨 ✓';
+  document.getElementById('gas-status-text').style.color = '#1D9E75';
+  closeModal('gas-modal');
+  alert('✅ Google 저장소가 연결되었습니다!');
+}
+async function sendToGas(action, data) {
+  if (!state.gasUrl) return;
+  try {
+    await fetch(state.gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action, classId: state.currentClassId, data})
+    });
+  } catch(e) { console.warn('GAS 저장 실패:', e); }
+}
+
+/* ====================================================
+   과거 기록 렌더링
+==================================================== */
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const records = (state.history[state.currentClassId] || []).slice().reverse();
+  if (!records.length) {
+    list.innerHTML = '<div style="font-size:13px;color:var(--text2);text-align:center;padding:20px">저장된 기록이 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = records.map(r => `
+    <div class="history-row">
+      <div>
+        <div class="history-name">${r.year}년 ${r.month}월 배치</div>
+        <div class="history-detail">${r.groups.length}모둠 · ${r.groups.reduce((a,g)=>a+g.students.length,0)}명 · ${r.date}</div>
+      </div>
+      <button class="history-view-btn" onclick="viewHistory(${r.year},${r.month})">보기</button>
+    </div>`).join('');
+}
+function viewHistory(year, month) {
+  const records = state.history[state.currentClassId] || [];
+  const record = records.find(r => r.year === year && r.month === month);
+  if (!record) return;
+  // 결과 화면에 표시
+  closeModal('teacher-modal');
+  state.lastResult = record;
+  renderResult(record);
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab')[1].classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-result').classList.add('active');
+}
+
+/* ====================================================
+   고정 학생
+==================================================== */
+function renderFixedTable() {
+  const tbody = document.getElementById('fixed-tbody');
+  const classFixed = state.fixedStudents.filter(f => f.classId === state.currentClassId);
+  if (!classFixed.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text2);font-size:13px;padding:14px">고정 학생이 없습니다.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = classFixed.map((f, i) => `
+    <tr>
+      <td>${f.name}</td>
+      <td><span class="badge badge-purple">${f.modumIdx+1}모둠</span></td>
+      <td style="color:var(--text2);font-size:12px">${f.reason||''}</td>
+      <td><button onclick="removeFixed(${i})" style="background:none;border:none;cursor:pointer;color:var(--text2)"><i class="ti ti-trash" style="font-size:14px"></i></button></td>
+    </tr>`).join('');
+}
+function addFixedRow() {
+  const students = getStudents();
+  const name = prompt('고정할 학생 이름:');
+  if (!name || !students.includes(name)) { if(name) alert('명렬표에 없는 이름입니다.'); return; }
+  const modumNum = parseInt(prompt(`고정할 모둠 번호 (1~${state.modumCount}):`));
+  if (isNaN(modumNum) || modumNum < 1 || modumNum > state.modumCount) { alert('올바른 모둠 번호를 입력하세요.'); return; }
+  const reason = prompt('사유 (선택):') || '';
+  state.fixedStudents.push({classId: state.currentClassId, name, modumIdx: modumNum-1, reason});
+  saveState();
+  renderFixedTable();
+}
+function removeFixed(i) {
+  const classFixed = state.fixedStudents.filter(f => f.classId === state.currentClassId);
+  const target = classFixed[i];
+  state.fixedStudents = state.fixedStudents.filter(f => f !== target);
+  saveState();
+  renderFixedTable();
+}
+
+/* ====================================================
+   PNG 저장
+==================================================== */
+function saveAsPng() {
+  const grid = document.getElementById('modum-grid');
+  if (!grid.children.length) { alert('먼저 모둠을 뽑아주세요!'); return; }
+  // html2canvas 동적 로드
+  if (!window.html2canvas) {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => doCapture();
+    document.head.appendChild(script);
+  } else { doCapture(); }
+}
+function doCapture() {
+  const target = document.getElementById('page-result');
+  html2canvas(target, {scale: 2, backgroundColor: '#f4f4f6', useCORS: true}).then(canvas => {
+    const a = document.createElement('a');
+    const now = new Date();
+    a.download = `모둠배치_${now.getFullYear()}년${now.getMonth()+1}월.png`;
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+}
+
+/* ====================================================
+   탭 전환
+==================================================== */
+function switchTab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('page-' + id).classList.add('active');
+}
+
+/* ====================================================
+   내부 탭 전환
+==================================================== */
+function switchInner(id, el) {
+  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('inner-history').style.display = id === 'history' ? 'block' : 'none';
+  document.getElementById('inner-fixed').style.display   = id === 'fixed'   ? 'block' : 'none';
+}
+
+/* ====================================================
+   모달
+==================================================== */
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+// 배경 클릭으로 닫기
+document.querySelectorAll('.modal-backdrop').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+});
+</script>
+</body>
+</html>
