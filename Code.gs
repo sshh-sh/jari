@@ -111,35 +111,35 @@ function updateLeaderCount(sheet, leaders, className) {
   const marker   = grade + '-' + classNum; // e.g. "3-1"
 
   // 학년별 컬럼 (1-indexed)
-  // J=10, K=11, L=12 / N=14, O=15, P=16 / R=18, S=19, T=20 / V=22, W=23, X=24
+  // J=10(학년반) K=11(번호) L=12(이름) M=13(모둠장횟수)
+  // N=14(학년반) O=15(번호) P=16(이름) Q=17(모둠장횟수)
+  // R=18        S=19       T=20       U=21
+  // V=22        W=23       X=24       Y=25
   const gradeColMap = {
-    '3': {numCol:10, countCol:11, nameCol:12},
-    '4': {numCol:14, countCol:15, nameCol:16},
-    '5': {numCol:18, countCol:19, nameCol:20},
-    '6': {numCol:22, countCol:23, nameCol:24}
+    '3': {classCol:10, nameCol:12, countCol:13},
+    '4': {classCol:14, nameCol:16, countCol:17},
+    '5': {classCol:18, nameCol:20, countCol:21},
+    '6': {classCol:22, nameCol:24, countCol:25}
   };
   const cols = gradeColMap[grade];
   if (!cols) return;
 
-  // 번호열 전체 읽기
-  const numValues   = sheet.getRange(2, cols.numCol,   lastRow-1, 1).getValues();
+  // 학년반열(J/N/R/V) 전체 읽기
+  const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
   const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
   const countValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
 
-  // marker("3-1") 위치 찾아서 해당 반 row 범위 결정
+  // marker("3-1") 행부터 다음 비어있지 않은 행 직전까지가 해당 반
   let startIdx = -1;
-  let endIdx   = numValues.length - 1;
+  let endIdx   = classValues.length - 1;
 
-  for (let i = 0; i < numValues.length; i++) {
-    const val = String(numValues[i][0]).trim();
+  for (let i = 0; i < classValues.length; i++) {
+    const val = String(classValues[i][0]).trim();
     if (val === marker) {
-      startIdx = i + 1; // 마커 다음 행부터 학생
-    } else if (startIdx > 0 && i >= startIdx) {
-      // 숫자가 아닌 값이 나오면 다음 반 시작 → 종료
-      if (val !== '' && isNaN(Number(val))) {
-        endIdx = i - 1;
-        break;
-      }
+      startIdx = i;
+    } else if (startIdx >= 0 && i > startIdx && val !== '') {
+      endIdx = i - 1;
+      break;
     }
   }
   if (startIdx === -1) return;
@@ -148,8 +148,7 @@ function updateLeaderCount(sheet, leaders, className) {
   leaders.forEach(leaderName => {
     for (let i = startIdx; i <= endIdx; i++) {
       if (String(nameValues[i][0]).trim() === String(leaderName).trim()) {
-        countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
-      }
+        countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;      }
     }
   });
 
