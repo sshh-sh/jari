@@ -2,8 +2,9 @@
  * 🎲 모둠뽑기 - Google Apps Script 백엔드
  */
 
-const SHEET_NAME   = '모둠기록';      // 앱 내부용 (JSON 원본)
-const SHEET_DETAIL = '모둠기록_보기'; // 보기 좋은 형태
+const SHEET_NAME   = '모둠뽑기';      // 앱 내부용 (JSON 원본)
+const SHEET_DETAIL = '모둠뽑기_보기'; // 보기 좋은 형태
+const SHEET_LEADER = '모둠장 횟수';   // 모둠장 누적 카운트
 
 // ===== 웹앱 진입점 =====
 function doPost(e) {
@@ -54,6 +55,7 @@ function saveRecord(classId, record) {
         JSON.stringify(record.groups)
       ]]);
       saveDetailSheet(classId, record);
+      if (record.leaders && record.leaders.length > 0) updateLeaderSheet(record.className || classId, record.leaders);
       return {success: true, message: '기존 기록 업데이트 완료'};
     }
   }
@@ -68,6 +70,7 @@ function saveRecord(classId, record) {
   ]);
 
   saveDetailSheet(classId, record);
+  if (record.leaders && record.leaders.length > 0) updateLeaderSheet(record.className || classId, record.leaders);
   return {success: true, message: '저장 완료'};
 }
 
@@ -76,19 +79,22 @@ function saveDetailSheet(classId, record) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sheet = ss.getSheetByName(SHEET_DETAIL);
 
+  const maxGroups = 6;
+  const headers = ['반', '년도', '월'];
+  for (let i = 1; i <= maxGroups; i++) headers.push(i + '모둠');
+  const totalCols = headers.length;
+
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_DETAIL);
-    const headers = ['반', '년도', '월', '모둠명', '학생 명단'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.getRange(1, 1, 1, totalCols).setValues([headers]);
     sheet.setFrozenRows(1);
-    sheet.getRange(1, 1, 1, headers.length)
+    sheet.getRange(1, 1, 1, totalCols)
       .setFontWeight('bold')
       .setBackground('#534AB7')
       .setFontColor('white');
-    sheet.setColumnWidth(5, 350);
+    for (let i = 4; i <= totalCols; i++) sheet.setColumnWidth(i, 200);
   }
 
-  // 반 이름 (className 없으면 classId 그대로)
   const className = record.className || classId;
 
   // 같은 반+월 기존 행 삭제
@@ -101,24 +107,18 @@ function saveDetailSheet(classId, record) {
   }
   toDelete.forEach(row => sheet.deleteRow(row));
 
-  // 모둠별로 한 행씩 추가
-  record.groups.forEach((group, i) => {
-    sheet.appendRow([
-      className,
-      record.year,
-      record.month,
-      group.name,
-      group.students.join(', ')
-    ]);
-  });
+  // 한 행에 모든 모둠 저장
+  const row = [className, record.year, record.month];
+  for (let i = 0; i < maxGroups; i++) {
+    const group = record.groups[i];
+    row.push(group ? group.students.join(', ') : '');
+  }
+  sheet.appendRow(row);
 
-  // 모둠별 번갈아 배경색 (가독성)
+  // 배경색
   const lastRow = sheet.getLastRow();
-  const startRow = lastRow - record.groups.length + 1;
-  record.groups.forEach((group, i) => {
-    const color = i % 2 === 0 ? '#f0effe' : '#ffffff';
-    sheet.getRange(startRow + i, 1, 1, 5).setBackground(color);
-  });
+  const color = lastRow % 2 === 0 ? '#f0effe' : '#ffffff';
+  sheet.getRange(lastRow, 1, 1, totalCols).setBackground(color);
 }
 
 // ===== 기록 불러오기 =====
@@ -141,6 +141,48 @@ function loadRecords(classId) {
   }
 
   return {success: true, records};
+}
+
+// ===== 모둠장 횟수 업데이트 =====
+function updateLeaderSheet(className, leaders) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_LEADER);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_LEADER);
+    sheet.getRange(1,1,1,3).setValues([['반', '이름', '모둠장 횟수']]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1,1,1,3).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.setColumnWidth(2, 120);
+    sheet.setColumnWidth(3, 120);
+  }
+
+  const data = sheet.getDataRange().getValues();
+
+  leaders.forEach(name => {
+    // 같은 반 + 같은 이름 찾기
+    let found = false;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === className && data[i][1] === name) {
+        const newCount = (data[i][2] || 0) + 1;
+        sheet.getRange(i+1, 3).setValue(newCount);
+        data[i][2] = newCount; // 로컬 업데이트
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      sheet.appendRow([className, name, 1]);
+      data.push([className, name, 1]);
+    }
+  });
+
+  // 횟수 내림차순 정렬
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 2) {
+    const range = sheet.getRange(2, 1, lastRow-1, 3);
+    range.sort({column: 3, ascending: false});
+  }
 }
 
 // ===== 시트 가져오거나 생성 =====

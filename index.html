@@ -798,7 +798,8 @@ function saveResult() {
   saveState();
   // GAS에도 저장
   const cls = getCurrentClass();
-  if (state.gasUrl) sendToGas('save', {...record, className: cls ? cls.name : state.currentClassId});
+  const leaders = state.leaders ? [...state.leaders] : [];
+  if (state.gasUrl) sendToGas('save', {...record, className: cls ? cls.name : state.currentClassId, leaders});
   renderHistory();
   alert('✅ 저장되었습니다!\n다음 달 배치에 자동으로 반영됩니다.');
 }
