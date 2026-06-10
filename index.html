@@ -834,25 +834,37 @@ async function sendToGas(action, data) {
 ==================================================== */
 function renderHistory() {
   const list = document.getElementById('history-list');
-  const records = (state.history[state.currentClassId] || []).slice().reverse();
-  if (!records.length) {
-    list.innerHTML = '<div style="font-size:13px;color:var(--text2);text-align:center;padding:20px">저장된 기록이 없습니다.</div>';
+
+  // 모든 반의 기록을 모아서 날짜 최신순 정렬
+  const allRecords = [];
+  state.classes.forEach(cls => {
+    const records = state.history[cls.id] || [];
+    records.forEach(r => {
+      allRecords.push({...r, classId: cls.id, className: cls.name});
+    });
+  });
+  allRecords.sort((a, b) => (b.year - a.year) || (b.month - a.month));
+
+  if (!allRecords.length) {
+    list.innerHTML = '<div style="font-size:16px;color:var(--text2);text-align:center;padding:20px">저장된 기록이 없습니다.</div>';
     return;
   }
-  list.innerHTML = records.map(r => `
+  list.innerHTML = allRecords.map((r, idx) => `
     <div class="history-row">
       <div>
-        <div class="history-name">${r.year}년 ${r.month}월 배치</div>
+        <div class="history-name">${r.className} ${r.month}월 배치기록</div>
         <div class="history-detail">${r.groups.length}모둠 · ${r.groups.reduce((a,g)=>a+g.students.length,0)}명 · ${r.date}</div>
       </div>
-      <button class="history-view-btn" onclick="viewHistory(${r.year},${r.month})">보기</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="history-view-btn" onclick="viewHistory('${r.classId}',${r.year},${r.month})">보기</button>
+        <button onclick="deleteHistory('${r.classId}',${r.year},${r.month})" style="background:none;border:1px solid #e05a2b;color:#e05a2b;padding:7px 14px;border-radius:8px;font-size:15px;cursor:pointer;font-family:inherit">삭제</button>
+      </div>
     </div>`).join('');
 }
-function viewHistory(year, month) {
-  const records = state.history[state.currentClassId] || [];
+function viewHistory(classId, year, month) {
+  const records = state.history[classId] || [];
   const record = records.find(r => r.year === year && r.month === month);
   if (!record) return;
-  // 결과 화면에 표시
   closeModal('teacher-modal');
   state.lastResult = record;
   renderResult(record);
@@ -860,6 +872,13 @@ function viewHistory(year, month) {
   document.querySelectorAll('.tab')[1].classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-result').classList.add('active');
+}
+function deleteHistory(classId, year, month) {
+  if (!confirm('이 기록을 삭제할까요?')) return;
+  if (!state.history[classId]) return;
+  state.history[classId] = state.history[classId].filter(r => !(r.year === year && r.month === month));
+  saveState();
+  renderHistory();
 }
 
 /* ====================================================
