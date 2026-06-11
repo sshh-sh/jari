@@ -632,7 +632,7 @@ function handleLoginClick() {
   if (window._fbUser) {
     if (confirm('로그아웃 하시겠어요?')) window._fb.signOut();
   } else {
-    window._fb.signIn().catch(e => alert('로그인 실패: ' + e.message));
+    window._fb.signIn().catch(e => showToast('로그인 실패: ' + e.message, 'error'));
   }
 }
 window.onAuthReady = function(user) {
@@ -747,7 +747,7 @@ function promptAddClass() {
 function promptDeleteClass() {
   const cls = getCurrentClass();
   if (!cls) return;
-  if (state.classes.length <= 1) { alert('마지막 반은 삭제할 수 없습니다.'); return; }
+  if (state.classes.length <= 1) { showToast('마지막 반은 삭제할 수 없습니다.', 'warning'); return; }
   if (!confirm(`'${cls.name}'을(를) 삭제할까요?\n저장된 기록도 함께 삭제됩니다.`)) return;
   state.classes = state.classes.filter(c => c.id !== cls.id);
   delete state.history[cls.id];
@@ -840,7 +840,7 @@ function handleFileUpload(e) {
             const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
             document.getElementById('name-input').value = names.join('\n');
             updateCount();
-            alert(`✅ ${names.length}명이 입력되었습니다!`);
+            showToast(`✅ ${names.length}명이 입력되었습니다!`, 'success');
           } else {
             saveCurrentStudents();
             let added = 0, lastId = null;
@@ -862,25 +862,25 @@ function handleFileUpload(e) {
             if (lastId) state.currentClassId = lastId;
             saveState();
             renderAll();
-            alert(`✅ ${added}개 반이 일괄 입력되었습니다!`);
+            showToast(`✅ ${added}개 반이 일괄 입력되었습니다!`, 'success');
           }
         } catch(err) {
-          alert('파일 읽기 오류: ' + err.message);
+          showToast('파일 읽기 오류: ' + err.message, 'error');
         }
       };
-      reader.onerror = () => alert('파일을 읽을 수 없습니다.');
+      reader.onerror = () => showToast('파일을 읽을 수 없습니다.', 'error');
       reader.readAsArrayBuffer(file);
     };
     e.target.value = null; // 같은 파일 재업로드 허용
     if (!window.XLSX) {
       const s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onerror = () => alert('라이브러리 로드 실패. 인터넷 연결을 확인해주세요.');
+      s.onerror = () => showToast('라이브러리 로드 실패. 인터넷 연결을 확인해주세요.', 'error');
       s.onload = doLoad;
       document.head.appendChild(s);
     } else { doLoad(); }
   } else {
-    alert('.xlsx 또는 .csv 파일만 업로드 가능합니다.');
+    showToast('.xlsx 또는 .csv 파일만 업로드 가능합니다.', 'warning');
   }
 }
 
@@ -1016,7 +1016,7 @@ function updateGenerateBtnText() {
 
 function generateModum() {
   const students = getStudents();
-  if (students.length < 2) { alert('학생 이름을 먼저 입력해 주세요!'); return; }
+  if (students.length < 2) { showToast('학생 이름을 먼저 입력해 주세요!', 'warning'); return; }
   saveCurrentStudents();
 
   const overlay = document.getElementById('loading-overlay');
@@ -1112,28 +1112,26 @@ function toggleLeader(name, el) {
    결과 저장
 ==================================================== */
 function saveResult() {
-  if (!state.lastResult) { alert('먼저 모둠을 뽑아주세요!'); return; }
+  if (!state.lastResult) { showToast('먼저 모둠을 뽑아주세요!', 'warning'); return; }
   const now = new Date();
+  const leaders = state.leaders ? [...state.leaders] : [];
   const record = {
     month: now.getMonth() + 1,
     year: now.getFullYear(),
     date: now.toLocaleDateString('ko-KR'),
-    groups: state.lastResult.groups
+    groups: state.lastResult.groups,
+    leaders
   };
   if (!state.history[state.currentClassId]) state.history[state.currentClassId] = [];
-  // 같은 월 기록 덮어쓰기
   const idx = state.history[state.currentClassId].findIndex(r => r.month === record.month && r.year === record.year);
   if (idx >= 0) state.history[state.currentClassId][idx] = record;
   else state.history[state.currentClassId].push(record);
-  // 최대 12개 유지
   state.history[state.currentClassId] = state.history[state.currentClassId].slice(-12);
   saveState();
-  // GAS에도 저장
   const cls = getCurrentClass();
-  const leaders = state.leaders ? [...state.leaders] : [];
   if (state.gasUrl) sendToGas('save', {...record, className: cls ? cls.name : state.currentClassId, leaders});
   renderHistory();
-  alert('✅ 저장되었습니다!\n다음 달 배치에 자동으로 반영됩니다.');
+  showToast('✅ 저장되었습니다!', 'success');
 }
 
 /* ====================================================
@@ -1141,13 +1139,13 @@ function saveResult() {
 ==================================================== */
 function saveGasUrl() {
   const url = document.getElementById('gas-url-input').value.trim();
-  if (!url) { alert('URL을 입력해 주세요.'); return; }
+  if (!url) { showToast('URL을 입력해 주세요.', 'warning'); return; }
   state.gasUrl = url;
   saveState();
   document.getElementById('gas-status-text').textContent = '구글 시트 연결됨 ✓';
   document.getElementById('gas-status-text').style.color = '#1D9E75';
   closeModal('gas-modal');
-  alert('✅ Google 저장소가 연결되었습니다!');
+  showToast('✅ 구글 시트가 연결되었습니다!', 'success');
 }
 async function sendToGas(action, data) {
   if (!state.gasUrl) return;
@@ -1196,7 +1194,7 @@ function renderHistory() {
 function viewHistory(classId, year, month) {
   const records = state.history[classId] || [];
   const record = records.find(r => String(r.year) === String(year) && String(r.month) === String(month));
-  if (!record) { alert('기록을 찾을 수 없습니다.'); return; }
+  if (!record) { showToast('기록을 찾을 수 없습니다.', 'error'); return; }
   closeModal('teacher-modal');
   // 탭 먼저 전환 후 렌더링
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1204,7 +1202,7 @@ function viewHistory(classId, year, month) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-result').classList.add('active');
   state.lastResult = record;
-  state.leaders = new Set();
+  state.leaders = new Set(record.leaders || []);
   renderResult(record);
 }
 function deleteHistory(classId, year, month) {
@@ -1236,9 +1234,9 @@ function renderFixedTable() {
 function addFixedRow() {
   const students = getStudents();
   const name = prompt('고정할 학생 이름:');
-  if (!name || !students.includes(name)) { if(name) alert('명렬표에 없는 이름입니다.'); return; }
+  if (!name || !students.includes(name)) { if(name) showToast('명렬표에 없는 이름입니다.', 'warning'); return; }
   const modumNum = parseInt(prompt(`고정할 모둠 번호 (1~${state.modumCount}):`));
-  if (isNaN(modumNum) || modumNum < 1 || modumNum > state.modumCount) { alert('올바른 모둠 번호를 입력하세요.'); return; }
+  if (isNaN(modumNum) || modumNum < 1 || modumNum > state.modumCount) { showToast('올바른 모둠 번호를 입력하세요.', 'warning'); return; }
   const reason = prompt('사유 (선택):') || '';
   state.fixedStudents.push({classId: state.currentClassId, name, modumIdx: modumNum-1, reason});
   saveState();
@@ -1257,7 +1255,7 @@ function removeFixed(i) {
 ==================================================== */
 function saveAsPng() {
   const grid = document.getElementById('modum-grid');
-  if (!grid.children.length) { alert('먼저 모둠을 뽑아주세요!'); return; }
+  if (!grid.children.length) { showToast('먼저 모둠을 뽑아주세요!', 'warning'); return; }
   // html2canvas 동적 로드
   if (!window.html2canvas) {
     const script = document.createElement('script');
@@ -1280,6 +1278,26 @@ function doCapture() {
 /* ====================================================
    탭 전환
 ==================================================== */
+/* ====================================================
+   토스트 알림
+==================================================== */
+function showToast(msg, type) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.style.cssText = 'position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;z-index:9999;';
+    document.body.appendChild(container);
+  }
+  const t = document.createElement('div');
+  const bg = type === 'error' ? '#993C1D' : type === 'warning' ? '#854F0B' : '#0F6E56';
+  t.style.cssText = `background:${bg};color:white;padding:12px 18px;border-radius:10px;font-size:15px;font-family:inherit;opacity:0;transition:opacity 0.2s;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.15);`;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => { t.style.opacity = '1'; });
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 200); }, 2800);
+}
+
 function switchTab(id, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
