@@ -452,7 +452,7 @@ textarea.name-input:focus { border-color: var(--accent); }
       <!-- 명렬표 -->
       <div class="card">
         <div class="card-title" style="justify-content:space-between;">
-          <span><i class="ti ti-users"></i> 학생 이름</span>
+          <span><i class="ti ti-users"></i> 학생 이름 <span id="name-count" style="font-size:15px;font-weight:400;color:var(--text2);margin-left:4px;">0명</span></span>
           <div style="display:flex;align-items:center;gap:6px;">
             <select id="class-select" onchange="selectClassById(this.value)" style="border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:inherit;font-size:16px;padding:7px 10px;outline:none;cursor:pointer;max-width:160px;"></select>
             <button onclick="promptAddClass()" title="반 추가" style="width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-plus"></i></button>
@@ -461,9 +461,10 @@ textarea.name-input:focus { border-color: var(--accent); }
         </div>
         <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()"></textarea>
         <div class="input-footer">
-          <span class="input-count" id="name-count">0명 입력됨</span>
-          <button class="upload-btn" onclick="downloadTemplate()"><i class="ti ti-download"></i> 양식 다운</button>
-          <label class="upload-btn"><i class="ti ti-upload"></i> 엑셀 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)"></label>
+          <div style="display:flex;gap:6px;">
+            <button class="upload-btn" onclick="downloadTemplate()"><i class="ti ti-download"></i> 입력양식 다운</button>
+            <label class="upload-btn"><i class="ti ti-upload"></i> 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)"></label>
+          </div>
         </div>
       </div>
 
@@ -796,7 +797,7 @@ function getStudents() {
 }
 function updateCount() {
   const n = getStudents().length;
-  document.getElementById('name-count').textContent = `${n}명 입력됨`;
+  document.getElementById('name-count').textContent = `${n}명`;
   updateTotalBadge();
 }
 function downloadTemplate() {
