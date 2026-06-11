@@ -833,43 +833,49 @@ function handleFileUpload(e) {
     const doLoad = () => {
       const reader = new FileReader();
       reader.onload = ev => {
-        const wb = XLSX.read(ev.target.result, {type: 'array'});
-        if (wb.SheetNames.length === 1) {
-          // 시트 1개 → 현재 반에 이름 입력
-          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
-          const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
-          document.getElementById('name-input').value = names.join('\n');
-          updateCount();
-        } else {
-          // 시트 여러 개 → 반 일괄 생성
-          saveCurrentStudents();
-          let added = 0, lastId = null;
-          wb.SheetNames.forEach(sheetName => {
-            const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header: 1});
+        try {
+          const wb = XLSX.read(new Uint8Array(ev.target.result), {type: 'array'});
+          if (wb.SheetNames.length === 1) {
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
             const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
-            if (!names.length) return;
-            const existing = state.classes.find(c => c.name === sheetName);
-            if (existing) {
-              existing.students = names.join('\n');
-              lastId = existing.id;
-            } else {
-              const id = 'c' + Date.now() + added;
-              state.classes.push({id, name: sheetName, students: names.join('\n')});
-              lastId = id;
-            }
-            added++;
-          });
-          if (lastId) state.currentClassId = lastId;
-          saveState();
-          renderAll();
-          alert(`✅ ${added}개 반이 일괄 입력되었습니다!`);
+            document.getElementById('name-input').value = names.join('\n');
+            updateCount();
+            alert(`✅ ${names.length}명이 입력되었습니다!`);
+          } else {
+            saveCurrentStudents();
+            let added = 0, lastId = null;
+            wb.SheetNames.forEach(sheetName => {
+              const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header: 1});
+              const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
+              if (!names.length) return;
+              const existing = state.classes.find(c => c.name === sheetName);
+              if (existing) {
+                existing.students = names.join('\n');
+                lastId = existing.id;
+              } else {
+                const id = 'c' + Date.now() + '_' + added;
+                state.classes.push({id, name: sheetName, students: names.join('\n')});
+                lastId = id;
+              }
+              added++;
+            });
+            if (lastId) state.currentClassId = lastId;
+            saveState();
+            renderAll();
+            alert(`✅ ${added}개 반이 일괄 입력되었습니다!`);
+          }
+        } catch(err) {
+          alert('파일 읽기 오류: ' + err.message);
         }
       };
+      reader.onerror = () => alert('파일을 읽을 수 없습니다.');
       reader.readAsArrayBuffer(file);
     };
+    e.target.value = null; // 같은 파일 재업로드 허용
     if (!window.XLSX) {
       const s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onerror = () => alert('라이브러리 로드 실패. 인터넷 연결을 확인해주세요.');
       s.onload = doLoad;
       document.head.appendChild(s);
     } else { doLoad(); }
