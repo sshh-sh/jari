@@ -286,11 +286,6 @@ textarea.name-input:focus { border-color: var(--accent); }
         <div class="logo-sub">이번 달 내 자리는 어디일까요?</div>
       </div>
     </div>
-    <div class="class-selector" onclick="openModal('class-modal')">
-      <i class="ti ti-school" style="font-size:15px;color:var(--text2)"></i>
-      <span id="current-class-label">반을 선택하세요</span>
-      <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text2)"></i>
-    </div>
     <button class="login-btn" id="login-btn" onclick="handleLoginClick()">
       <i class="ti ti-brand-google" style="color:#4285F4"></i>
       <span id="login-btn-text">구글 로그인</span>
@@ -310,7 +305,14 @@ textarea.name-input:focus { border-color: var(--accent); }
     <div class="setup-grid">
       <!-- 명렬표 -->
       <div class="card">
-        <div class="card-title"><i class="ti ti-users"></i> 학생 명렬표</div>
+        <div class="card-title" style="justify-content:space-between;">
+          <span><i class="ti ti-users"></i> 학생 명렬표</span>
+          <div class="class-selector" onclick="openModal('class-modal')" style="padding:8px 14px;font-size:16px;">
+            <i class="ti ti-school" style="font-size:14px;color:var(--text2)"></i>
+            <span id="current-class-label">반을 선택하세요</span>
+            <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text2)"></i>
+          </div>
+        </div>
         <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()"></textarea>
         <div class="input-footer">
           <span class="input-count" id="name-count">0명 입력됨</span>
