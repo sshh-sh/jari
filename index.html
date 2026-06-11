@@ -286,10 +286,17 @@ textarea.name-input:focus { border-color: var(--accent); }
         <div class="logo-sub">이번 달 내 자리는 어디일까요?</div>
       </div>
     </div>
-    <button class="login-btn" id="login-btn" onclick="handleLoginClick()">
-      <i class="ti ti-brand-google" style="color:#4285F4"></i>
-      <span id="login-btn-text">구글 로그인</span>
-    </button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="gas-status-wrap" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);">
+        <i class="ti ti-cloud" style="font-size:14px;"></i>
+        <span id="gas-status-text">GAS 미연결</span>
+        <button onclick="openModal('gas-modal')" style="font-size:11px;color:var(--accent);background:none;border:none;padding:0 0 0 4px;cursor:pointer;font-family:inherit;">설정</button>
+      </div>
+      <button class="login-btn" id="login-btn" onclick="handleLoginClick()">
+        <i class="ti ti-brand-google" style="color:#4285F4"></i>
+        <span id="login-btn-text">구글 로그인</span>
+      </button>
+    </div>
   </div>
 
   <!-- 탭바 -->
@@ -306,7 +313,7 @@ textarea.name-input:focus { border-color: var(--accent); }
       <!-- 명렬표 -->
       <div class="card">
         <div class="card-title" style="justify-content:space-between;">
-          <span><i class="ti ti-users"></i> 학생 명렬표</span>
+          <span><i class="ti ti-users"></i> 학생 이름</span>
           <div style="display:flex;align-items:center;gap:6px;">
             <select id="class-select" onchange="selectClassById(this.value)" style="border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:inherit;font-size:16px;padding:7px 10px;outline:none;cursor:pointer;max-width:160px;"></select>
             <button onclick="promptAddClass()" title="반 추가" style="width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-plus"></i></button>
@@ -341,14 +348,6 @@ textarea.name-input:focus { border-color: var(--accent); }
       </div>
     </div>
 
-    <!-- GAS 연결 상태 -->
-    <div style="margin-bottom:16px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow)">
-      <div style="display:flex;align-items:center;gap:8px;font-size:13px">
-        <i class="ti ti-cloud" style="color:var(--text2)"></i>
-        <span id="gas-status-text" style="color:var(--text2)">Google 저장소 미연결</span>
-      </div>
-      <button onclick="openModal('gas-modal')" style="font-size:12px;color:var(--accent);background:none;border:1px solid var(--accent);padding:4px 12px;border-radius:6px;cursor:pointer;font-family:inherit">연결 설정</button>
-    </div>
 
     <button class="generate-btn" onclick="generateModum()">
       <i class="ti ti-sparkles"></i>
