@@ -103,7 +103,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 .action-btn.primary:hover { background: var(--accent-dark); }
 .chalkboard-bar { background: #1e3a30; border-radius: var(--radius-sm); padding: 14px 20px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; color: #7ec8a8; font-size: 17px; }
 .chalkboard-dot { width: 10px; height: 10px; border-radius: 50%; background: #4ecb8d; flex-shrink: 0; }
-.modum-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.modum-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .modum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); opacity: 0; }
 @keyframes cardPop { 0% { opacity: 0; transform: scale(0.88) translateY(14px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 .modum-card.popped { animation: cardPop 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards; }
@@ -823,7 +823,8 @@ function renderResult(result) {
 
   document.getElementById('chalkboard-info').innerHTML =
     `<strong style="color:#7ec8a8">${clsName}</strong> &nbsp;·&nbsp; ${year}년 ${month}월 모둠 배치 &nbsp;·&nbsp; 과거 기록 반영 완료`;
-  document.getElementById('result-title').textContent = `${month}월 모둠 배치 결과 🎉`;
+  const day = now.getDate();
+  document.getElementById('result-title').textContent = `모둠 배치 결과 (${month}월 ${day}일) 🎉`;
   document.getElementById('result-meta').textContent =
     `${result.groups.length}모둠 · 총 ${totalStudents}명 · 겹침 ${result.overlapCount}건`;
 
