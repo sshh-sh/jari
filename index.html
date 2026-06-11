@@ -810,24 +810,49 @@ function handleFileUpload(e) {
     };
     reader.readAsText(file, 'UTF-8');
   } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-    const loadXlsx = () => {
+    const doLoad = () => {
       const reader = new FileReader();
       reader.onload = ev => {
         const wb = XLSX.read(ev.target.result, {type: 'array'});
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, {header: 1});
-        const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
-        document.getElementById('name-input').value = names.join('\n');
-        updateCount();
+        if (wb.SheetNames.length === 1) {
+          // 시트 1개 → 현재 반에 이름 입력
+          const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header: 1});
+          const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
+          document.getElementById('name-input').value = names.join('\n');
+          updateCount();
+        } else {
+          // 시트 여러 개 → 반 일괄 생성
+          saveCurrentStudents();
+          let added = 0, lastId = null;
+          wb.SheetNames.forEach(sheetName => {
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header: 1});
+            const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
+            if (!names.length) return;
+            const existing = state.classes.find(c => c.name === sheetName);
+            if (existing) {
+              existing.students = names.join('\n');
+              lastId = existing.id;
+            } else {
+              const id = 'c' + Date.now() + added;
+              state.classes.push({id, name: sheetName, students: names.join('\n')});
+              lastId = id;
+            }
+            added++;
+          });
+          if (lastId) state.currentClassId = lastId;
+          saveState();
+          renderAll();
+          alert(`✅ ${added}개 반이 일괄 입력되었습니다!`);
+        }
       };
       reader.readAsArrayBuffer(file);
     };
     if (!window.XLSX) {
       const s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = loadXlsx;
+      s.onload = doLoad;
       document.head.appendChild(s);
-    } else { loadXlsx(); }
+    } else { doLoad(); }
   } else {
     alert('.xlsx 또는 .csv 파일만 업로드 가능합니다.');
   }
