@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎲 모둠뽑기 배포 안내서</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f4f6; --surface: #ffffff; --surface2: #f0f0f3;
+  --border: #e2e2e8; --text: #1a1a2e; --text2: #6b6b80;
+  --accent: #534AB7; --accent-light: #EEEDFE; --accent-dark: #3c3489;
+  --radius: 12px; --radius-sm: 8px;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 16px;
+}
+body { background: var(--bg); color: var(--text); min-height: 100vh; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 60px; }
+.back-btn { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); font-size: 15px; text-decoration: none; margin-bottom: 24px; padding: 8px 14px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent-light); transition: background 0.15s; }
+.back-btn:hover { background: var(--accent); color: white; }
+.page-title { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.page-sub { font-size: 15px; color: var(--text2); margin-bottom: 32px; }
+.section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px; }
+.section-badge { display: inline-flex; align-items: center; gap: 7px; background: var(--accent); color: white; font-size: 13px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
+.section-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.section-desc { font-size: 14px; color: var(--text2); margin-bottom: 20px; line-height: 1.8; }
+.step { display: flex; gap: 14px; margin-bottom: 16px; }
+.step:last-child { margin-bottom: 0; }
+.step-num { min-width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.step-content { flex: 1; }
+.step-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.step-desc { font-size: 14px; color: var(--text2); line-height: 1.8; }
+.step-desc strong { color: var(--text); }
+.code-block { background: #1e1e2e; color: #cdd6f4; border-radius: var(--radius-sm); padding: 16px 18px; font-family: monospace; font-size: 12px; line-height: 1.7; overflow-x: auto; margin-top: 10px; position: relative; }
+.copy-btn { position: absolute; top: 10px; right: 10px; background: var(--accent); color: white; border: none; border-radius: 6px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.copy-btn:hover { background: var(--accent-dark); }
+.note-box { background: var(--accent-light); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14px; color: var(--accent-dark); display: flex; gap: 8px; margin-top: 16px; line-height: 1.7; }
+.warn-box { background: #fff8e7; border: 1px solid #f0c040; border-radius: var(--radius-sm); padding: 12px 16px; font-size: 14px; color: #7a5500; display: flex; gap: 8px; margin-top: 12px; line-height: 1.7; }
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+.faq-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.faq-item:last-child { border-bottom: none; }
+.faq-q { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; display: flex; gap: 8px; }
+.faq-a { font-size: 14px; color: var(--text2); line-height: 1.8; padding-left: 22px; }
+footer { text-align: center; padding: 20px; font-size: 13px; color: var(--text2); border-top: 1px solid var(--border); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="back-btn"><i class="ti ti-arrow-left"></i> 앱으로 돌아가기</a>
+
+  <div class="page-title">🎲 모둠뽑기 배포 안내서</div>
+  <div class="page-sub">구글 시트 연동(GAS) 방법을 안내합니다.</div>
+
+  <!-- 방법 1 -->
+  <div class="section">
+    <div class="section-badge"><i class="ti ti-table"></i> 구글 시트 연동 (GAS)</div>
+    <div class="section-title">모둠 결과를 구글 시트에 자동 저장하기</div>
+    <div class="section-desc">모둠 배치 결과와 모둠장 횟수를 구글 시트에 자동으로 저장하고 싶을 때 사용하세요.</div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">구글 스프레드시트 열기</div>
+        <div class="step-desc"><a href="https://drive.google.com" target="_blank" style="color:var(--accent)">drive.google.com</a> 접속 후 기존 시트를 열거나 새로 만드세요.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">Apps Script 열기</div>
+        <div class="step-desc">상단 메뉴 → <strong>확장 프로그램</strong> → <strong>Apps Script</strong> 클릭</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">코드 붙여넣기</div>
+        <div class="step-desc">편집창 코드 전체 선택 <strong>(Ctrl+A)</strong> → 삭제 → 아래 코드 복사 후 붙여넣기 <strong>(Ctrl+V)</strong> → 저장 <strong>(Ctrl+S)</strong></div>
+        <div class="code-block" id="gas-code">
+<button class="copy-btn" onclick="copyCode()">복사</button>const SHEET_NAME   = '모둠뽑기';
+const SHEET_DETAIL = '모둠뽑기_보기';
+
+function doPost(e) {
+  try {
+    const data    = JSON.parse(e.postData.contents);
+    const action  = data.action;
+    const classId = data.classId;
+    const payload = data.data;
+    let result;
+    if (action === 'save') result = saveRecord(classId, payload);
+    else if (action === 'load') result = loadRecords(classId);
+    else result = {success: false, message: '알 수 없는 액션'};
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({success: false, message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'모둠뽑기 GAS 작동 중'})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function saveRecord(classId, record) {
+  const sheet = getOrCreateSheet();
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i &lt; data.length; i++) {
+    if (data[i][0] === classId &amp;&amp; data[i][1] === record.year &amp;&amp; data[i][2] === record.month) {
+      sheet.getRange(i+1,1,1,5).setValues([[classId, record.year, record.month, record.date, JSON.stringify(record.groups)]]);
+      saveDetailSheet(classId, record);
+      return {success: true, message: '기존 기록 업데이트 완료'};
+    }
+  }
+  sheet.appendRow([classId, record.year, record.month, record.date, JSON.stringify(record.groups)]);
+  saveDetailSheet(classId, record);
+  return {success: true, message: '저장 완료'};
+}
+
+function saveDetailSheet(classId, record) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_DETAIL);
+  const resultHeaders = ['반', '년도', '월', '1모둠', '2모둠', '3모둠', '4모둠', '5모둠', '6모둠'];
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_DETAIL);
+    sheet.getRange(1,1,1,9).setValues([resultHeaders]);
+    sheet.getRange(1,1,1,9).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.setFrozenRows(1);
+    for (let i = 4; i &lt;= 9; i++) sheet.setColumnWidth(i, 180);
+  }
+  const className = record.className || classId;
+  const existing = sheet.getDataRange().getValues();
+  const toDelete = [];
+  for (let i = existing.length-1; i >= 1; i--) {
+    if (existing[i][0] === className &amp;&amp; existing[i][1] === record.year &amp;&amp; existing[i][2] === record.month) toDelete.push(i+1);
+  }
+  toDelete.forEach(row => sheet.deleteRow(row));
+  const row = [className, record.year, record.month];
+  for (let i = 0; i &lt; 6; i++) {
+    const group = record.groups[i];
+    row.push(group ? group.students.join(', ') : '');
+  }
+  sheet.appendRow(row);
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow,1,1,9).setBackground(lastRow%2===0 ? '#f0effe' : '#ffffff');
+  if (record.leaders &amp;&amp; record.leaders.length > 0) updateLeaderCount(sheet, record.leaders, className);
+}
+
+function updateLeaderCount(sheet, leaders, className) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow &lt; 2) return;
+  const gradeMatch = className.match(/(\d+)학년/);
+  const classNumMatch = className.match(/(\d+)반/);
+  if (!gradeMatch || !classNumMatch) return;
+  const grade    = gradeMatch[1];
+  const classNum = classNumMatch[1];
+  const marker   = grade + '-' + classNum;
+  const gradeColMap = {
+    '3': {classCol:10, nameCol:12, countCol:13},
+    '4': {classCol:14, nameCol:16, countCol:17},
+    '5': {classCol:18, nameCol:20, countCol:21},
+    '6': {classCol:22, nameCol:24, countCol:25}
+  };
+  const cols = gradeColMap[grade];
+  if (!cols) return;
+  const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+  const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+  const countValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+  let startIdx = -1, endIdx = classValues.length - 1;
+  for (let i = 0; i &lt; classValues.length; i++) {
+    const val = String(classValues[i][0]).trim();
+    if (val === marker) { startIdx = i; }
+    else if (startIdx >= 0 &amp;&amp; i > startIdx &amp;&amp; val !== '') { endIdx = i - 1; break; }
+  }
+  if (startIdx === -1) return;
+  leaders.forEach(leaderName => {
+    for (let i = startIdx; i &lt;= endIdx; i++) {
+      if (String(nameValues[i][0]).trim() === String(leaderName).trim())
+        countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
+    }
+  });
+  sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(countValues);
+}
+
+function loadRecords(classId) {
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+  const records = [];
+  for (let i = 1; i &lt; data.length; i++) {
+    if (data[i][0] === classId) {
+      try { records.push({year:data[i][1], month:data[i][2], date:data[i][3], groups:JSON.parse(data[i][4])}); } catch(e) {}
+    }
+  }
+  return {success: true, records};
+}
+
+function getOrCreateSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.getRange(1,1,1,5).setValues([['반 ID','년도','월','날짜','모둠 데이터(JSON)']]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1,1,1,5).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.setColumnWidth(5,400);
+  }
+  return sheet;
+}</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">웹앱으로 배포하기</div>
+        <div class="step-desc">
+          오른쪽 위 <strong>배포</strong> → <strong>새 배포</strong> → ⚙️ 톱니바퀴 → <strong>웹 앱</strong> 선택<br>
+          · 다음 사용자로 실행: <strong>나 (본인 계정)</strong><br>
+          · 액세스 권한: <strong>모든 사용자</strong><br>
+          <strong>배포</strong> 클릭 → 권한 승인 → 생성된 <strong>웹 앱 URL 복사</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-content">
+        <div class="step-title">앱에 URL 연결하기</div>
+        <div class="step-desc">
+          앱 오른쪽 위 <strong>GAS 설정</strong> 클릭 → 복사한 URL 붙여넣기 → <strong>저장하고 연결하기</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-box">
+      <i class="ti ti-check" style="flex-shrink:0;font-size:18px;margin-top:2px;"></i>
+      상단에 <strong>GAS 연결됨 ✓</strong> 표시되면 완료! 이후 결과 저장 시 구글 시트에 자동 기록됩니다.
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section">
+    <div class="section-title" style="margin-bottom:16px;">❓ 자주 묻는 질문</div>
+    <div class="faq-item">
+      <div class="faq-q"><i class="ti ti-question-mark" style="color:var(--accent);font-size:16px;flex-shrink:0;margin-top:2px;"></i> 다른 선생님과 기록이 섞이나요?</div>
+      <div class="faq-a">아니요! 각자의 구글 시트를 따로 사용하므로 완전히 분리됩니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><i class="ti ti-question-mark" style="color:var(--accent);font-size:16px;flex-shrink:0;margin-top:2px;"></i> 기존에 쓰던 구글 시트를 그대로 써도 되나요?</div>
+      <div class="faq-a">네! "모둠뽑기", "모둠뽑기_보기" 탭만 자동으로 추가되고 기존 탭은 건드리지 않습니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><i class="ti ti-question-mark" style="color:var(--accent);font-size:16px;flex-shrink:0;margin-top:2px;"></i> 스마트폰에서도 사용할 수 있나요?</div>
+      <div class="faq-a">네, 모바일 브라우저에서도 접속 가능합니다.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q"><i class="ti ti-question-mark" style="color:var(--accent);font-size:16px;flex-shrink:0;margin-top:2px;"></i> 매년 새 학년이 되면 기록을 초기화해야 하나요?</div>
+      <div class="faq-a">🔑 열쇠 버튼 → 과거 배치 기록에서 삭제하거나, 3월에 자동 초기화됩니다.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:#534AB7"></i>
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다.
+</footer>
+
+<script>
+function copyCode() {
+  const raw = `const SHEET_NAME   = '모둠뽑기';
+const SHEET_DETAIL = '모둠뽑기_보기';
+
+function doPost(e) {
+  try {
+    const data    = JSON.parse(e.postData.contents);
+    const action  = data.action;
+    const classId = data.classId;
+    const payload = data.data;
+    let result;
+    if (action === 'save') result = saveRecord(classId, payload);
+    else if (action === 'load') result = loadRecords(classId);
+    else result = {success: false, message: '알 수 없는 액션'};
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({success: false, message: err.toString()})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'모둠뽑기 GAS 작동 중'})).setMimeType(ContentService.MimeType.JSON);
+}
+
+function saveRecord(classId, record) {
+  const sheet = getOrCreateSheet();
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === classId && data[i][1] === record.year && data[i][2] === record.month) {
+      sheet.getRange(i+1,1,1,5).setValues([[classId, record.year, record.month, record.date, JSON.stringify(record.groups)]]);
+      saveDetailSheet(classId, record);
+      return {success: true, message: '기존 기록 업데이트 완료'};
+    }
+  }
+  sheet.appendRow([classId, record.year, record.month, record.date, JSON.stringify(record.groups)]);
+  saveDetailSheet(classId, record);
+  return {success: true, message: '저장 완료'};
+}
+
+function saveDetailSheet(classId, record) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_DETAIL);
+  const resultHeaders = ['반', '년도', '월', '1모둠', '2모둠', '3모둠', '4모둠', '5모둠', '6모둠'];
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_DETAIL);
+    sheet.getRange(1,1,1,9).setValues([resultHeaders]);
+    sheet.getRange(1,1,1,9).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.setFrozenRows(1);
+    for (let i = 4; i <= 9; i++) sheet.setColumnWidth(i, 180);
+  }
+  const className = record.className || classId;
+  const existing = sheet.getDataRange().getValues();
+  const toDelete = [];
+  for (let i = existing.length-1; i >= 1; i--) {
+    if (existing[i][0] === className && existing[i][1] === record.year && existing[i][2] === record.month) toDelete.push(i+1);
+  }
+  toDelete.forEach(row => sheet.deleteRow(row));
+  const row = [className, record.year, record.month];
+  for (let i = 0; i < 6; i++) {
+    const group = record.groups[i];
+    row.push(group ? group.students.join(', ') : '');
+  }
+  sheet.appendRow(row);
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(lastRow,1,1,9).setBackground(lastRow%2===0 ? '#f0effe' : '#ffffff');
+  if (record.leaders && record.leaders.length > 0) updateLeaderCount(sheet, record.leaders, className);
+}
+
+function updateLeaderCount(sheet, leaders, className) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+  const gradeMatch = className.match(/(\\d+)학년/);
+  const classNumMatch = className.match(/(\\d+)반/);
+  if (!gradeMatch || !classNumMatch) return;
+  const grade    = gradeMatch[1];
+  const classNum = classNumMatch[1];
+  const marker   = grade + '-' + classNum;
+  const gradeColMap = {
+    '3': {classCol:10, nameCol:12, countCol:13},
+    '4': {classCol:14, nameCol:16, countCol:17},
+    '5': {classCol:18, nameCol:20, countCol:21},
+    '6': {classCol:22, nameCol:24, countCol:25}
+  };
+  const cols = gradeColMap[grade];
+  if (!cols) return;
+  const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+  const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+  const countValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+  let startIdx = -1, endIdx = classValues.length - 1;
+  for (let i = 0; i < classValues.length; i++) {
+    const val = String(classValues[i][0]).trim();
+    if (val === marker) { startIdx = i; }
+    else if (startIdx >= 0 && i > startIdx && val !== '') { endIdx = i - 1; break; }
+  }
+  if (startIdx === -1) return;
+  leaders.forEach(leaderName => {
+    for (let i = startIdx; i <= endIdx; i++) {
+      if (String(nameValues[i][0]).trim() === String(leaderName).trim())
+        countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
+    }
+  });
+  sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(countValues);
+}
+
+function loadRecords(classId) {
+  const sheet = getOrCreateSheet();
+  const data  = sheet.getDataRange().getValues();
+  const records = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === classId) {
+      try { records.push({year:data[i][1], month:data[i][2], date:data[i][3], groups:JSON.parse(data[i][4])}); } catch(e) {}
+    }
+  }
+  return {success: true, records};
+}
+
+function getOrCreateSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.getRange(1,1,1,5).setValues([['반 ID','년도','월','날짜','모둠 데이터(JSON)']]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1,1,1,5).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.setColumnWidth(5,400);
+  }
+  return sheet;
+}`;
+  navigator.clipboard.writeText(raw).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '복사됨 ✓';
+    setTimeout(() => btn.textContent = '복사', 2000);
+  });
+}
+</script>
+</body>
+</html>
