@@ -299,7 +299,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 
   <!-- 탭바 -->
   <div class="tabbar">
-    <button class="tab active" onclick="switchTab('setup',this)"><i class="ti ti-settings"></i> 설정</button>
+    <button class="tab active" onclick="switchTab('setup',this)"><i class="ti ti-sparkles"></i> 뽑기</button>
     <button class="tab" onclick="switchTab('result',this)"><i class="ti ti-layout-board"></i> 결과</button>
     <div class="tab-spacer"></div>
     <button class="key-btn" onclick="openModal('teacher-modal')" title="선생님 전용"><i class="ti ti-key"></i></button>
@@ -771,8 +771,7 @@ function smartShuffle(students, modumCount, modumSizes, history, fixedStudents) 
    모둠 생성
 ==================================================== */
 function updateGenerateBtnText() {
-  const month = new Date().getMonth() + 1;
-  document.getElementById('generate-btn-text').textContent = `${month}월 모둠을 뽑아주세요!`;
+  document.getElementById('generate-btn-text').textContent = '모둠을 뽑아주세요!';
 }
 
 function generateModum() {
