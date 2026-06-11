@@ -188,6 +188,13 @@ textarea.name-input:focus { border-color: var(--accent); }
   .topbar, .tabbar, .save-bar, .result-actions, .chalkboard-bar { display: none !important; }
   .modum-grid { break-inside: avoid; }
 }
+
+/* ===== 로그인 ===== */
+.login-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 16px; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.login-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+.login-btn img { width: 20px; height: 20px; border-radius: 50%; }
+.login-btn.logged-in { background: var(--accent-light); border-color: var(--accent); color: var(--accent-dark); }
+.sync-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #e6f5ee; color: #0e6b43; font-weight: 500; }
 </style>
 </head>
 <body>
@@ -284,6 +291,10 @@ textarea.name-input:focus { border-color: var(--accent); }
       <span id="current-class-label">반을 선택하세요</span>
       <i class="ti ti-chevron-down" style="font-size:13px;color:var(--text2)"></i>
     </div>
+    <button class="login-btn" id="login-btn" onclick="handleLoginClick()">
+      <i class="ti ti-brand-google" style="color:#4285F4"></i>
+      <span id="login-btn-text">구글 로그인</span>
+    </button>
   </div>
 
   <!-- 탭바 -->
@@ -369,6 +380,43 @@ textarea.name-input:focus { border-color: var(--accent); }
   </div>
 </div>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD83E1n25MxW8K_fBU5hHzYVLTR9W9RH3Y",
+  authDomain: "jari-f00d1.firebaseapp.com",
+  projectId: "jari-f00d1",
+  storageBucket: "jari-f00d1.firebasestorage.app",
+  messagingSenderId: "715165626757",
+  appId: "1:715165626757:web:2c6a5e5e5f67f11fb414ec"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+window._fb = {
+  signIn: () => signInWithPopup(auth, provider),
+  signOut: () => signOut(auth),
+  save: async (uid, data) => {
+    await setDoc(doc(db, 'users', uid), data);
+  },
+  load: async (uid) => {
+    const snap = await getDoc(doc(db, 'users', uid));
+    return snap.exists() ? snap.data() : null;
+  }
+};
+
+onAuthStateChanged(auth, user => {
+  window._fbUser = user;
+  if (window.onAuthReady) window.onAuthReady(user);
+});
+</script>
+
 <script>
 /* ====================================================
    전역 상태
@@ -388,19 +436,37 @@ let state = {
 };
 
 /* ====================================================
-   로컬스토리지 저장/불러오기
+   저장/불러오기 (Firebase 우선, 없으면 localStorage)
 ==================================================== */
 function saveState() {
   localStorage.setItem('modum_state', JSON.stringify(state));
+  if (window._fbUser) {
+    const data = JSON.parse(JSON.stringify(state));
+    delete data.lastResult; // 결과는 클라우드에 저장 불필요
+    window._fb.save(window._fbUser.uid, data).catch(e => console.warn('Firebase 저장 실패:', e));
+  }
 }
 function loadState() {
   const saved = localStorage.getItem('modum_state');
   if (saved) {
     try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
   }
-  // 3월 초기화 로직
+  marchReset();
+}
+async function loadFromFirebase(uid) {
+  try {
+    const data = await window._fb.load(uid);
+    if (data && data.classes && data.classes.length) {
+      Object.assign(state, data);
+      saveState(); // localStorage에도 동기화
+      renderAll();
+      updateGenerateBtnText();
+    }
+  } catch(e) { console.warn('Firebase 불러오기 실패:', e); }
+}
+function marchReset() {
   const now = new Date();
-  if (now.getMonth() === 2) { // 3월
+  if (now.getMonth() === 2) {
     const lastReset = localStorage.getItem('modum_last_reset');
     const thisYear = String(now.getFullYear());
     if (lastReset !== thisYear) {
@@ -412,6 +478,32 @@ function loadState() {
     }
   }
 }
+
+/* ====================================================
+   Firebase 로그인/로그아웃
+==================================================== */
+function handleLoginClick() {
+  if (window._fbUser) {
+    if (confirm('로그아웃 하시겠어요?')) window._fb.signOut();
+  } else {
+    window._fb.signIn().catch(e => alert('로그인 실패: ' + e.message));
+  }
+}
+window.onAuthReady = function(user) {
+  const btn = document.getElementById('login-btn');
+  const txt = document.getElementById('login-btn-text');
+  if (user) {
+    btn.classList.add('logged-in');
+    const name = user.displayName ? user.displayName.split(' ')[0] : '선생님';
+    txt.innerHTML = `${name} <span class="sync-badge">동기화 중</span>`;
+    loadFromFirebase(user.uid).then(() => {
+      txt.innerHTML = `${name} <span class="sync-badge">동기화 완료 ✓</span>`;
+    });
+  } else {
+    btn.classList.remove('logged-in');
+    txt.innerHTML = '구글 로그인';
+  }
+};
 
 /* ====================================================
    초기화
