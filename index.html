@@ -427,7 +427,7 @@ textarea.name-input:focus { border-color: var(--accent); }
     <div style="display:flex;align-items:center;gap:8px;">
       <div id="gas-status-wrap" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);">
         <i class="ti ti-cloud" style="font-size:14px;"></i>
-        <span id="gas-status-text">GAS 미연결</span>
+        <span id="gas-status-text">구글 시트 미연결</span>
         <button onclick="openModal('gas-modal')" style="font-size:11px;color:var(--accent);background:none;border:none;padding:0 0 0 4px;cursor:pointer;font-family:inherit;">설정</button>
       </div>
       <button class="login-btn" id="login-btn" onclick="handleLoginClick()">
@@ -675,7 +675,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // GAS URL
   if (state.gasUrl) {
     document.getElementById('gas-url-input').value = state.gasUrl;
-    document.getElementById('gas-status-text').textContent = 'Google 저장소 연결됨 ✓';
+    document.getElementById('gas-status-text').textContent = '구글 시트 연결됨 ✓';
     document.getElementById('gas-status-text').style.color = '#1D9E75';
   }
 });
@@ -801,7 +801,6 @@ function updateCount() {
 function handleFileUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
-  // CSV 처리 (간단 파싱)
   if (file.name.endsWith('.csv')) {
     const reader = new FileReader();
     reader.onload = ev => {
@@ -810,8 +809,27 @@ function handleFileUpload(e) {
       updateCount();
     };
     reader.readAsText(file, 'UTF-8');
+  } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+    const loadXlsx = () => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const wb = XLSX.read(ev.target.result, {type: 'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {header: 1});
+        const names = rows.map(r => String(r[0] || '').trim()).filter(Boolean);
+        document.getElementById('name-input').value = names.join('\n');
+        updateCount();
+      };
+      reader.readAsArrayBuffer(file);
+    };
+    if (!window.XLSX) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = loadXlsx;
+      document.head.appendChild(s);
+    } else { loadXlsx(); }
   } else {
-    alert('CSV 파일 또는 붙여넣기를 사용해 주세요.\n(엑셀에서 다른 이름으로 저장 → CSV 형식 선택)');
+    alert('.xlsx 또는 .csv 파일만 업로드 가능합니다.');
   }
 }
 
@@ -1075,7 +1093,7 @@ function saveGasUrl() {
   if (!url) { alert('URL을 입력해 주세요.'); return; }
   state.gasUrl = url;
   saveState();
-  document.getElementById('gas-status-text').textContent = 'Google 저장소 연결됨 ✓';
+  document.getElementById('gas-status-text').textContent = '구글 시트 연결됨 ✓';
   document.getElementById('gas-status-text').style.color = '#1D9E75';
   closeModal('gas-modal');
   alert('✅ Google 저장소가 연결되었습니다!');
