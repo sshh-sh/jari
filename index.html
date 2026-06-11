@@ -462,6 +462,7 @@ textarea.name-input:focus { border-color: var(--accent); }
         <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()"></textarea>
         <div class="input-footer">
           <span class="input-count" id="name-count">0명 입력됨</span>
+          <button class="upload-btn" onclick="downloadTemplate()"><i class="ti ti-download"></i> 양식 다운</button>
           <label class="upload-btn"><i class="ti ti-upload"></i> 엑셀 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)"></label>
         </div>
       </div>
@@ -798,6 +799,25 @@ function updateCount() {
   document.getElementById('name-count').textContent = `${n}명 입력됨`;
   updateTotalBadge();
 }
+function downloadTemplate() {
+  const doDownload = () => {
+    const wb = XLSX.utils.book_new();
+    [['3학년 1반', ['김민준','이서연','박지호','최수아','정우진','한지원','오민서','임현준']],
+     ['3학년 2반', ['강다은','윤지호','백승현','장예린','송민기','류하은','노태양','신아름']]
+    ].forEach(([name, students]) => {
+      const ws = XLSX.utils.aoa_to_sheet(students.map(s => [s]));
+      XLSX.utils.book_append_sheet(wb, ws, name);
+    });
+    XLSX.writeFile(wb, '모둠뽑기_명렬표_양식.xlsx');
+  };
+  if (!window.XLSX) {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload = doDownload;
+    document.head.appendChild(s);
+  } else { doDownload(); }
+}
+
 function handleFileUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
