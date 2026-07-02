@@ -1,4 +1,4 @@
-/**
+monaco.editor.getModels()[0].setValue(`/**
  * 관피타 출첵 - Google Apps Script 백엔드
  * - doGet  ?action=get&key=...  /  ?action=set&key=...&value=...
  * - doPost { app:'kao', action:'set', key:'kao-state', value }
@@ -123,3 +123,4 @@ function getOrCreateKaoSheet() {
   if (!sheet) sheet = ss.insertSheet(KAO_SHEET);
   return sheet;
 }
+`)
