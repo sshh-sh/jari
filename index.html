@@ -1150,7 +1150,7 @@ function saveGasUrl() {
   showToast('✅ 구글 시트가 연결되었습니다!', 'success');
 }
 async function sendToGas(action, data, classId) {
-  if (!state.gasUrl) return;
+  if (!state.gasUrl) return false;
   try {
     await fetch(state.gasUrl, {
       method: 'POST',
@@ -1158,7 +1158,11 @@ async function sendToGas(action, data, classId) {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({action, classId: classId || state.currentClassId, data})
     });
-  } catch(e) { console.warn('GAS 저장 실패:', e); }
+    return true;
+  } catch(e) {
+    console.warn('GAS 저장 실패:', e);
+    return false;
+  }
 }
 async function syncHistoryToGas() {
   if (!state.gasUrl) { showToast('먼저 구글 시트를 연결해 주세요.', 'warning'); return; }
@@ -1169,13 +1173,18 @@ async function syncHistoryToGas() {
     });
   });
   if (!jobs.length) { showToast('동기화할 기록이 없습니다.', 'warning'); return; }
-  showToast(`${jobs.length}건 동기화 중...`, 'success');
-  for (const job of jobs) {
+  showToast(`${jobs.length}건 동기화 시작...`, 'success');
+  let ok = 0, fail = 0;
+  for (let i = 0; i < jobs.length; i++) {
+    const job = jobs[i];
     const leaders = job.record.leaders || [];
-    await sendToGas('save', {...job.record, className: job.className, leaders}, job.classId);
+    const label = `${job.className} ${job.record.year}.${job.record.month}`;
+    const sent = await sendToGas('save', {...job.record, className: job.className, leaders}, job.classId);
+    if (sent) { ok++; showToast(`(${i+1}/${jobs.length}) ${label} 전송 완료`, 'success'); }
+    else { fail++; showToast(`(${i+1}/${jobs.length}) ${label} 전송 실패`, 'error'); }
     await new Promise(r => setTimeout(r, 400));
   }
-  showToast(`✅ ${jobs.length}건 동기화 완료!`, 'success');
+  showToast(fail ? `동기화 종료: 성공 ${ok}건 / 실패 ${fail}건` : `✅ 동기화 완료! (${ok}건)`, fail ? 'warning' : 'success');
 }
 
 /* ====================================================
