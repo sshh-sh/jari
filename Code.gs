@@ -29,6 +29,11 @@ function doPost(e) {
 }
 
 function doGet(e) {
+  const action = e.parameter && e.parameter.action;
+  if (action === 'setupRoster') {
+    setupLeaderRoster();
+    return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'명렬표 생성 완료'})).setMimeType(ContentService.MimeType.JSON);
+  }
   return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'모둠뽑기 GAS 작동 중'})).setMimeType(ContentService.MimeType.JSON);
 }
 
