@@ -1,7 +1,7 @@
 const SHEET_NAME   = '모둠뽑기';
 const SHEET_DETAIL = '모둠뽑기_보기';
 
-// 학년별 명렬표 칸 위치: 반(마커) / 번호 / 이름 / 모둠장 횟수
+// 학년별 명렬표 칸 위치: 반(마커) / 번호 / 이름 / 모둠장 기록(월)
 const GRADE_COLS = {
   '3': {classCol:10, numCol:11, nameCol:12, countCol:13}, // J~M
   '4': {classCol:14, numCol:15, nameCol:16, countCol:17}, // N~Q
@@ -33,6 +33,14 @@ function doGet(e) {
   if (action === 'setupRoster') {
     setupLeaderRoster();
     return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'명렬표 생성 완료'})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (action === 'debugClasses') {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DETAIL);
+    if (!sheet) return ContentService.createTextOutput(JSON.stringify({error:'no SHEET_DETAIL'})).setMimeType(ContentService.MimeType.JSON);
+    const resultLastRow = getResultLastRow(sheet);
+    const rows = resultLastRow > 1 ? sheet.getRange(2, 1, resultLastRow-1, 3).getValues() : [];
+    const classNames = rows.map(r => ({className: r[0], year: r[1], month: r[2]}));
+    return ContentService.createTextOutput(JSON.stringify({resultLastRow, classNames})).setMimeType(ContentService.MimeType.JSON);
   }
   return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'모둠뽑기 GAS 작동 중'})).setMimeType(ContentService.MimeType.JSON);
 }
@@ -92,7 +100,7 @@ function saveDetailSheet(classId, record) {
   insertResultRowAtTop(sheet, row);
 
   if (record.leaders && record.leaders.length > 0) {
-    updateLeaderCount(sheet, record.leaders, className);
+    updateLeaderCount(sheet, record.leaders, className, record.month);
   }
 }
 
@@ -136,9 +144,9 @@ function restripeResultRows(sheet) {
   }
 }
 
-// ===== 모둠장 횟수 업데이트 =====
+// ===== 모둠장 기록(월) 업데이트 =====
 // 명렬표에 반/학생이 아직 없으면(새 반, 새 학생) 명렬표를 다시 만든 뒤 한 번 더 시도한다.
-function updateLeaderCount(sheet, leaders, className) {
+function updateLeaderCount(sheet, leaders, className, month) {
   const gradeMatch    = className.match(/(\d+)학년/);
   const classNumMatch = className.match(/(\d+)반/);
   if (!gradeMatch || !classNumMatch) return;
@@ -148,20 +156,21 @@ function updateLeaderCount(sheet, leaders, className) {
   const cols = GRADE_COLS[grade];
   if (!cols) return;
 
-  if (!applyLeaderIncrement(sheet, cols, marker, leaders)) {
+  if (!applyLeaderIncrement(sheet, cols, marker, leaders, month)) {
     setupLeaderRoster();
-    applyLeaderIncrement(sheet, cols, marker, leaders);
+    applyLeaderIncrement(sheet, cols, marker, leaders, month);
   }
 }
 
-// marker 반의 leaders 각각에 모둠장 횟수 +1. leaders 전원이 명렬표에서 매칭되면 true, 하나라도 못 찾으면 false.
-function applyLeaderIncrement(sheet, cols, marker, leaders) {
+// marker 반의 leaders 각각의 기록 칸에 "N월"을 추가(같은 달 중복 추가 안 함).
+// leaders 전원이 명렬표에서 매칭되면 true, 하나라도 못 찾으면 false.
+function applyLeaderIncrement(sheet, cols, marker, leaders, month) {
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) return false;
 
-  const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
-  const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
-  const countValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+  const classValues  = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+  const nameValues   = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+  const recordValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
 
   let startIdx = -1, endIdx = classValues.length - 1;
   for (let i = 0; i < classValues.length; i++) {
@@ -171,27 +180,30 @@ function applyLeaderIncrement(sheet, cols, marker, leaders) {
   }
   if (startIdx === -1) return false;
 
+  const token = month + '월';
   let allMatched = true;
   leaders.forEach(leaderName => {
     let matched = false;
     for (let i = startIdx; i <= endIdx; i++) {
       if (String(nameValues[i][0]).trim() === String(leaderName).trim()) {
-        countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
+        const months = String(recordValues[i][0] || '').split(',').map(s => s.trim()).filter(Boolean);
+        if (!months.includes(token)) months.push(token);
+        recordValues[i][0] = months.join(', ');
         matched = true;
       }
     }
     if (!matched) allMatched = false;
   });
 
-  sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(countValues);
+  sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(recordValues);
   return allMatched;
 }
 
 // ===================================================================
 // ★ 1회용 설정 함수 - Apps Script 편집기에서 한 번 실행하면 K열부터 학년별
-// 명렬표 칸(반/번호/이름/모둠장 횟수)이 자동으로 생성됩니다.
+// 명렬표 칸(반/번호/이름/모둠장 기록)이 자동으로 생성됩니다.
 // 지금까지 저장된 모둠 결과에 등장한 학생들을 모아 만들며, 이미 채워진
-// 모둠장 횟수는 그대로 보존됩니다. 이후 새 학생이 추가되면 다시 실행해도 됨.
+// 모둠장 기록은 그대로 보존됩니다. 이후 새 학생이 추가되면 다시 실행해도 됨.
 // ===================================================================
 function setupLeaderRoster() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -236,9 +248,9 @@ function setupLeaderRoster() {
 }
 
 function writeGradeRoster(sheet, cols, markers, rosterByClass) {
-  const existingCount = readExistingLeaderCounts(sheet, cols);
+  const existingRecord = readExistingLeaderRecords(sheet, cols);
 
-  sheet.getRange(1, cols.classCol, 1, 4).setValues([['반','번호','이름','모둠장 횟수']]);
+  sheet.getRange(1, cols.classCol, 1, 4).setValues([['반','번호','이름','모둠장 기록(월)']]);
   sheet.getRange(1, cols.classCol, 1, 4).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
 
   let row = 2;
@@ -248,28 +260,28 @@ function writeGradeRoster(sheet, cols, markers, rosterByClass) {
       sheet.getRange(row, cols.classCol).setValue(idx === 0 ? marker : '');
       sheet.getRange(row, cols.numCol).setValue(idx + 1);
       sheet.getRange(row, cols.nameCol).setValue(name);
-      sheet.getRange(row, cols.countCol).setValue(existingCount[marker + '|' + name] || 0);
+      sheet.getRange(row, cols.countCol).setValue(existingRecord[marker + '|' + name] || '');
       row++;
     });
   });
 }
 
-// 이미 명렬표에 있던 학생의 모둠장 횟수를 보존하기 위해 미리 읽어둠
-function readExistingLeaderCounts(sheet, cols) {
+// 이미 명렬표에 있던 학생의 모둠장 기록(월)을 보존하기 위해 미리 읽어둠
+function readExistingLeaderRecords(sheet, cols) {
   const lastRow = sheet.getLastRow();
   const result = {};
   if (lastRow < 2) return result;
 
-  const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
-  const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
-  const countValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+  const classValues  = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+  const nameValues   = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+  const recordValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
 
   let curMarker = '';
   for (let i = 0; i < classValues.length; i++) {
     const marker = String(classValues[i][0]).trim();
     if (marker) curMarker = marker;
     const name = String(nameValues[i][0]).trim();
-    if (curMarker && name) result[curMarker + '|' + name] = Number(countValues[i][0]) || 0;
+    if (curMarker && name) result[curMarker + '|' + name] = String(recordValues[i][0] || '').trim();
   }
   return result;
 }
