@@ -34,14 +34,6 @@ function doGet(e) {
     setupLeaderRoster();
     return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'명렬표 생성 완료'})).setMimeType(ContentService.MimeType.JSON);
   }
-  if (action === 'debugClasses') {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_DETAIL);
-    if (!sheet) return ContentService.createTextOutput(JSON.stringify({error:'no SHEET_DETAIL'})).setMimeType(ContentService.MimeType.JSON);
-    const resultLastRow = getResultLastRow(sheet);
-    const rows = resultLastRow > 1 ? sheet.getRange(2, 1, resultLastRow-1, 3).getValues() : [];
-    const classNames = rows.map(r => ({className: r[0], year: r[1], month: r[2]}));
-    return ContentService.createTextOutput(JSON.stringify({resultLastRow, classNames})).setMimeType(ContentService.MimeType.JSON);
-  }
   return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'모둠뽑기 GAS 작동 중'})).setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -257,10 +249,11 @@ function writeGradeRoster(sheet, cols, markers, rosterByClass) {
   markers.forEach(marker => {
     const names = [...rosterByClass[marker]].sort();
     names.forEach((name, idx) => {
-      sheet.getRange(row, cols.classCol).setValue(idx === 0 ? marker : '');
+      // 반 마커("3-1" 등)를 그대로 두면 구글시트가 날짜로 자동 변환해버리므로 텍스트 서식 강제
+      sheet.getRange(row, cols.classCol).setNumberFormat('@').setValue(idx === 0 ? marker : '');
       sheet.getRange(row, cols.numCol).setValue(idx + 1);
-      sheet.getRange(row, cols.nameCol).setValue(name);
-      sheet.getRange(row, cols.countCol).setValue(existingRecord[marker + '|' + name] || '');
+      sheet.getRange(row, cols.nameCol).setNumberFormat('@').setValue(name);
+      sheet.getRange(row, cols.countCol).setNumberFormat('@').setValue(existingRecord[marker + '|' + name] || '');
       row++;
     });
   });
