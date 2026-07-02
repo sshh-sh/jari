@@ -409,6 +409,7 @@ textarea.name-input:focus { border-color: var(--accent); }
         <input id="gas-url-input" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;color:var(--text);background:var(--surface2);outline:none" placeholder="https://script.google.com/macros/s/..." />
       </div>
       <button onclick="saveGasUrl()" style="width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:18px;font-weight:700;cursor:pointer">저장하고 연결하기</button>
+      <button onclick="syncHistoryToGas()" style="width:100%;padding:14px;margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">기존 저장된 기록 구글시트로 동기화</button>
       <div class="info-box" style="margin-top:12px"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:18px"></i> GAS 배포 방법은 함께 제공된 안내서를 참고하세요.</div>
     </div>
   </div>
@@ -1148,16 +1149,33 @@ function saveGasUrl() {
   closeModal('gas-modal');
   showToast('✅ 구글 시트가 연결되었습니다!', 'success');
 }
-async function sendToGas(action, data) {
+async function sendToGas(action, data, classId) {
   if (!state.gasUrl) return;
   try {
     await fetch(state.gasUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({action, classId: state.currentClassId, data})
+      body: JSON.stringify({action, classId: classId || state.currentClassId, data})
     });
   } catch(e) { console.warn('GAS 저장 실패:', e); }
+}
+async function syncHistoryToGas() {
+  if (!state.gasUrl) { showToast('먼저 구글 시트를 연결해 주세요.', 'warning'); return; }
+  const jobs = [];
+  state.classes.forEach(cls => {
+    (state.history[cls.id] || []).forEach(record => {
+      jobs.push({classId: cls.id, className: cls.name, record});
+    });
+  });
+  if (!jobs.length) { showToast('동기화할 기록이 없습니다.', 'warning'); return; }
+  showToast(`${jobs.length}건 동기화 중...`, 'success');
+  for (const job of jobs) {
+    const leaders = job.record.leaders || [];
+    await sendToGas('save', {...job.record, className: job.className, leaders}, job.classId);
+    await new Promise(r => setTimeout(r, 400));
+  }
+  showToast(`✅ ${jobs.length}건 동기화 완료!`, 'success');
 }
 
 /* ====================================================
