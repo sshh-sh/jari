@@ -137,6 +137,7 @@ function restripeResultRows(sheet) {
 }
 
 // ===== 모둠장 횟수 업데이트 =====
+// 명렬표에 반/학생이 아직 없으면(새 반, 새 학생) 명렬표를 다시 만든 뒤 한 번 더 시도한다.
 function updateLeaderCount(sheet, leaders, className) {
   const gradeMatch    = className.match(/(\d+)학년/);
   const classNumMatch = className.match(/(\d+)반/);
@@ -147,8 +148,16 @@ function updateLeaderCount(sheet, leaders, className) {
   const cols = GRADE_COLS[grade];
   if (!cols) return;
 
+  if (!applyLeaderIncrement(sheet, cols, marker, leaders)) {
+    setupLeaderRoster();
+    applyLeaderIncrement(sheet, cols, marker, leaders);
+  }
+}
+
+// marker 반의 leaders 각각에 모둠장 횟수 +1. leaders 전원이 명렬표에서 매칭되면 true, 하나라도 못 찾으면 false.
+function applyLeaderIncrement(sheet, cols, marker, leaders) {
   const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return;
+  if (lastRow < 2) return false;
 
   const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
   const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
@@ -160,17 +169,22 @@ function updateLeaderCount(sheet, leaders, className) {
     if (val === marker) { startIdx = i; }
     else if (startIdx >= 0 && i > startIdx && val !== '') { endIdx = i-1; break; }
   }
-  if (startIdx === -1) return;
+  if (startIdx === -1) return false;
 
+  let allMatched = true;
   leaders.forEach(leaderName => {
+    let matched = false;
     for (let i = startIdx; i <= endIdx; i++) {
       if (String(nameValues[i][0]).trim() === String(leaderName).trim()) {
         countValues[i][0] = (Number(countValues[i][0]) || 0) + 1;
+        matched = true;
       }
     }
+    if (!matched) allMatched = false;
   });
 
   sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(countValues);
+  return allMatched;
 }
 
 // ===================================================================
