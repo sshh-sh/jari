@@ -57,22 +57,23 @@ body:has(#page-result.active) #app-footer { display: none; }
 .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 14px; }
 textarea.name-input { width: 100%; height: 340px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 20px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 2.2; outline: none; transition: border-color 0.15s; }
 textarea.name-input:focus { border-color: var(--accent); }
-.input-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
-.input-count { font-size: 18px; color: var(--text2); }
-.upload-btn { font-size: 16px; color: var(--accent); background: none; border: 1px solid var(--accent); padding: 8px 18px; border-radius: 8px; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 6px; transition: all 0.15s; }
-.upload-btn:hover { background: var(--accent-light); }
-.counter-row { display: flex; align-items: center; gap: 20px; margin-bottom: 18px; }
-.counter-group label { display: block; font-size: 17px; color: var(--text2); margin-bottom: 8px; }
-.counter { display: flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); }
-.counter button { width: 52px; height: 52px; border: none; background: none; cursor: pointer; font-size: 26px; color: var(--text); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-.counter button:hover { background: var(--border); }
-.counter-val { width: 64px; text-align: center; font-size: 22px; font-weight: 700; color: var(--text); background: var(--surface); padding: 10px 0; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
-.total-badge { font-size: 17px; background: var(--surface2); color: var(--text2); padding: 10px 18px; border-radius: 8px; margin-top: 16px; border: 1px solid var(--border); }
+.name-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.name-toolbar-label { font-size: 16px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.name-toolbar-label i { color: var(--accent); font-size: 18px; }
+.name-toolbar-label #name-count { font-size: 18px; font-weight: 700; color: var(--accent); }
+.toolbar-btn { height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-size: 15px; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background 0.15s; }
+.toolbar-btn:hover { background: var(--border); }
+.toolbar-btn.accent { color: var(--accent); background: var(--surface); border-color: var(--accent); }
+.toolbar-btn.accent:hover { background: var(--accent-light); }
+.toolbar-divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
+.modum-setting-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.counter-group label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+.modum-count-select { height: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-family: inherit; font-size: 18px; font-weight: 700; padding: 0 14px; outline: none; cursor: pointer; }
+.total-badge { font-size: 15px; height: 42px; display: flex; align-items: center; background: var(--surface2); color: var(--text2); padding: 0 16px; border-radius: 8px; border: 1px solid var(--border); white-space: nowrap; }
 .modum-per-section { margin-top: 14px; }
 .modum-per-label { font-size: 17px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
-.modum-per-list { display: flex; flex-direction: column; gap: 0; }
+.modum-per-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
 .modum-per-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
-.modum-per-row:last-child { border-bottom: none; }
 .modum-per-name { display: flex; align-items: center; gap: 12px; font-size: 19px; color: var(--text); }
 .modum-dot { width: 14px; height: 14px; border-radius: 50%; }
 .counter.sm .counter-val { width: 52px; font-size: 19px; }
@@ -449,36 +450,31 @@ textarea.name-input:focus { border-color: var(--accent); }
     <div class="setup-grid">
       <!-- 명렬표 -->
       <div class="card">
-        <div class="card-title" style="justify-content:space-between;">
-          <span><i class="ti ti-users"></i> 학생 이름 <span id="name-count" style="font-size:15px;font-weight:400;color:var(--text2);margin-left:4px;">0명</span></span>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <select id="class-select" onchange="selectClassById(this.value)" style="border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:inherit;font-size:16px;padding:7px 10px;outline:none;cursor:pointer;max-width:160px;"></select>
-            <button onclick="promptAddClass()" title="반 추가" style="width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-plus"></i></button>
-            <button onclick="promptDeleteClass()" title="반 삭제" style="width:36px;height:36px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ti-trash"></i></button>
-          </div>
+        <div class="name-toolbar">
+          <span class="name-toolbar-label"><i class="ti ti-users"></i> 이름입력 <span id="name-count">0명</span></span>
+          <select id="class-select" onchange="selectClassById(this.value)" style="border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);font-family:inherit;font-size:16px;padding:7px 10px;outline:none;cursor:pointer;max-width:160px;"></select>
+          <button class="toolbar-btn" onclick="promptAddClass()">학급추가</button>
+          <button class="toolbar-btn" onclick="promptDeleteClass()">학급삭제</button>
+          <span class="toolbar-divider"></span>
+          <button class="toolbar-btn accent" onclick="downloadTemplate()"><i class="ti ti-download"></i> 일괄입력양식 다운</button>
+          <label class="toolbar-btn accent"><i class="ti ti-upload"></i> 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)"></label>
         </div>
         <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()"></textarea>
-        <div class="input-footer">
-          <div style="display:flex;gap:6px;">
-            <button class="upload-btn" onclick="downloadTemplate()"><i class="ti ti-download"></i> 입력양식 다운</button>
-            <label class="upload-btn"><i class="ti ti-upload"></i> 업로드<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)"></label>
-          </div>
-        </div>
       </div>
 
       <!-- 모둠 설정 -->
       <div class="card">
         <div class="card-title"><i class="ti ti-adjustments-horizontal"></i> 모둠 설정</div>
-        <div class="counter-row">
+        <div class="modum-setting-row">
           <div class="counter-group">
             <label>모둠 수</label>
-            <div class="counter">
-              <button onclick="changeModum(-1)">−</button>
-              <div class="counter-val" id="modum-count-val">6</div>
-              <button onclick="changeModum(1)">+</button>
-            </div>
+            <select id="modum-count-val" class="modum-count-select" onchange="changeModumTo(this.value)"></select>
           </div>
           <div class="total-badge" id="total-badge">총 0명 · 6모둠</div>
+          <button class="generate-btn" onclick="generateModum()">
+            <i class="ti ti-sparkles"></i>
+            <span id="generate-btn-text">6월 모둠을 뽑아주세요!</span>
+          </button>
         </div>
         <div class="modum-per-section">
           <div class="modum-per-label">모둠별 인원수 (개별 설정)</div>
@@ -486,12 +482,6 @@ textarea.name-input:focus { border-color: var(--accent); }
         </div>
       </div>
     </div>
-
-
-    <button class="generate-btn" onclick="generateModum()">
-      <i class="ti ti-sparkles"></i>
-      <span id="generate-btn-text">6월 모둠을 뽑아주세요!</span>
-    </button>
   </div>
 
   <!-- 결과 탭 -->
@@ -518,7 +508,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v5
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v6
 </footer>
 
 <script type="module">
@@ -665,6 +655,8 @@ window.addEventListener('DOMContentLoaded', () => {
     saveState();
   }
   if (!state.currentClassId) state.currentClassId = state.classes[0].id;
+  populateModumCountSelect();
+  document.getElementById('modum-count-val').value = state.modumCount;
   renderAll();
   updateGenerateBtnText();
 
@@ -723,7 +715,7 @@ function selectClassById(id) {
   state.currentClassId = id;
   const cls = getCurrentClass();
   if (cls) {
-    if (cls.modumCount) { state.modumCount = cls.modumCount; document.getElementById('modum-count-val').textContent = state.modumCount; }
+    if (cls.modumCount) { state.modumCount = cls.modumCount; document.getElementById('modum-count-val').value = state.modumCount; }
     if (cls.modumSizes) state.modumSizes = cls.modumSizes;
   }
   saveState();
@@ -882,10 +874,20 @@ function handleFileUpload(e) {
 /* ====================================================
    모둠 설정
 ==================================================== */
-function changeModum(delta) {
-  state.modumCount = Math.max(2, Math.min(10, state.modumCount + delta));
+function populateModumCountSelect() {
+  const sel = document.getElementById('modum-count-val');
+  sel.innerHTML = '';
+  for (let i = 2; i <= 20; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = i;
+    sel.appendChild(opt);
+  }
+}
+function changeModumTo(value) {
+  state.modumCount = Math.max(2, Math.min(20, parseInt(value) || 2));
   while (state.modumSizes.length < state.modumCount) state.modumSizes.push(4);
-  document.getElementById('modum-count-val').textContent = state.modumCount;
+  document.getElementById('modum-count-val').value = state.modumCount;
   renderModumPerList();
   updateTotalBadge();
 }
@@ -917,7 +919,7 @@ function updateTotalBadge() {
   const students = getStudents().length;
   const total = state.modumSizes.slice(0, state.modumCount).reduce((a,b) => a+(b||4), 0);
   const badge = document.getElementById('total-badge');
-  badge.textContent = `총 ${students}명 입력됨 · 배치 ${total}자리`;
+  badge.textContent = `총 ${students}명 입력 / ${total}명 배치`;
   badge.style.color = students !== total ? '#e05a2b' : 'var(--text2)';
 }
 
