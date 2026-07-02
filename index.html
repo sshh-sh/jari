@@ -55,9 +55,9 @@ body:has(#page-result.active) #app-footer { display: none; }
 
 /* ===== 설정 탭 ===== */
 #page-setup.active { display: flex; flex-direction: column; height: calc(100vh - 215px); }
-.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; }
+.setup-grid { display: grid; grid-template-columns: 2fr 3fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
 .setup-grid > .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-textarea.name-input { width: 100%; flex: 1; min-height: 340px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 20px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 2.2; outline: none; transition: border-color 0.15s; }
+textarea.name-input { width: 100%; flex: 1; min-height: 340px; max-height: 600px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 20px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 2.2; outline: none; transition: border-color 0.15s; }
 textarea.name-input:focus { border-color: var(--accent); }
 .name-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .name-toolbar-label { font-size: 16px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -517,7 +517,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v8
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v9
 </footer>
 
 <script type="module">
@@ -794,6 +794,14 @@ function updateCount() {
   const n = getStudents().length;
   document.getElementById('name-count').textContent = `${n}명`;
   updateTotalBadge();
+  autoGrowNameInput();
+}
+// 입력한 이름이 많아지면 내부 스크롤 대신 박스 자체가 커지도록(최대 600px까지). 그 이상은 자동 스크롤.
+function autoGrowNameInput() {
+  const el = document.getElementById('name-input');
+  el.style.minHeight = '0px';
+  const needed = Math.min(el.scrollHeight, 600);
+  el.style.minHeight = Math.max(needed, 340) + 'px';
 }
 function downloadTemplate() {
   const doDownload = () => {
