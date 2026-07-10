@@ -129,6 +129,9 @@ textarea.name-input:focus { border-color: var(--accent); }
 .student-row .leader-star { font-size: 0.7em; opacity: 0; transition: opacity 0.15s, transform 0.15s; transform: scale(0.5); }
 .student-row.is-leader .leader-star { opacity: 1; transform: scale(1); }
 .student-row.is-leader { font-weight: 700; }
+.student-row .roster-stars { display: inline-flex; align-items: center; gap: 2px; font-size: 0.5em; line-height: 1; }
+.student-row .star-leader-count { color: #F5C518; letter-spacing: -1px; }
+.student-row .star-manager { color: #4B7BEC; font-size: 1.6em; }
 
 /* ===== 모달 ===== */
 .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; padding: 20px; }
@@ -517,7 +520,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v11
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v12
 </footer>
 
 <script type="module">
@@ -573,6 +576,7 @@ let state = {
   history: {},          // {classId: [{month, year, groups:[{name,[students]}]}]}
   lastResult: null,     // 마지막 배치 결과
   gasUrl: '',
+  rosterStars: {},       // {이름: {count, isManager}} - 결과 화면 별 표시용, 저장 안 함
 };
 
 /* ====================================================
@@ -1071,6 +1075,7 @@ function renderResult(result) {
   const year = now.getFullYear();
   const cls = getCurrentClass();
   const clsName = cls ? cls.name : '';
+  loadRosterStars(clsName);
   const totalStudents = result.groups.reduce((a, g) => a + g.students.length, 0);
 
   document.getElementById('chalkboard-info').innerHTML =
@@ -1096,6 +1101,7 @@ function renderResult(result) {
       return `<div class="student-row${isLeader ? ' is-leader' : ''}" onclick="toggleLeader('${s.replace(/'/g,"\\'")}', this)">
         ${isFixed ? '<i class="ti ti-pin pin-icon"></i>' : ''}
         <span class="student-name">${s}</span>
+        <span class="roster-stars" data-name="${s.replace(/"/g,'&quot;')}"></span>
         <span class="leader-star">⭐</span>
       </div>`;
     }).join('');
@@ -1107,6 +1113,49 @@ function renderResult(result) {
       <div class="modum-card-body">${studentsHtml}</div>`;
     grid.appendChild(card);
     setTimeout(() => card.classList.add('popped'), i * 70);
+  });
+  shrinkOverflowingNames();
+}
+
+/* ====================================================
+   명렬표 별 표시 (모둠장 누적 횟수 = 노란 별, 매니저 = 파란 별)
+   결과 화면에서만 표시됨. 구글 시트(GAS)에서 JSONP로 조회.
+==================================================== */
+function jsonpFetch(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__jsonp_cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+    const script = document.createElement('script');
+    const cleanup = () => { delete window[cbName]; script.remove(); };
+    window[cbName] = (data) => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('jsonp 실패')); };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    document.body.appendChild(script);
+  });
+}
+
+function loadRosterStars(clsName) {
+  if (!state.gasUrl || !clsName) { state.rosterStars = {}; applyRosterStars(); return; }
+  const gradeMatch = clsName.match(/(\d+)학년/);
+  const classNumMatch = clsName.match(/(\d+)반/);
+  if (!gradeMatch || !classNumMatch) { state.rosterStars = {}; applyRosterStars(); return; }
+  const marker = gradeMatch[1] + '-' + classNumMatch[1];
+  jsonpFetch(state.gasUrl + '?action=roster&marker=' + encodeURIComponent(marker))
+    .then(data => {
+      state.rosterStars = {};
+      (data.students || []).forEach(s => { state.rosterStars[s.name] = s; });
+      applyRosterStars();
+    })
+    .catch(() => {});
+}
+
+function applyRosterStars() {
+  document.querySelectorAll('#modum-grid .roster-stars').forEach(el => {
+    const info = state.rosterStars && state.rosterStars[el.dataset.name];
+    if (!info) { el.innerHTML = ''; return; }
+    let html = '';
+    if (info.count > 0) html += `<span class="star-leader-count">${'★'.repeat(info.count)}</span>`;
+    if (info.isManager) html += `<span class="star-manager">★</span>`;
+    el.innerHTML = html;
   });
   shrinkOverflowingNames();
 }

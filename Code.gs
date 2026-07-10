@@ -1,12 +1,12 @@
 const SHEET_NAME   = '모둠뽑기';
 const SHEET_DETAIL = '모둠뽑기_보기';
 
-// 학년별 명렬표 칸 위치: 반(마커) / 번호 / 이름 / 모둠장 기록(월)
+// 학년별 명렬표 칸 위치: 반(마커) / 번호 / 이름 / 모둠장 기록(월) / 매니저
 const GRADE_COLS = {
-  '3': {classCol:10, numCol:11, nameCol:12, countCol:13}, // J~M
-  '4': {classCol:14, numCol:15, nameCol:16, countCol:17}, // N~Q
-  '5': {classCol:18, numCol:19, nameCol:20, countCol:21}, // R~U
-  '6': {classCol:22, numCol:23, nameCol:24, countCol:25}  // V~Y
+  '3': {classCol:10, numCol:11, nameCol:12, countCol:13, mgrCol:14}, // J~N
+  '4': {classCol:15, numCol:16, nameCol:17, countCol:18, mgrCol:19}, // O~S
+  '5': {classCol:20, numCol:21, nameCol:22, countCol:23, mgrCol:24}, // T~X
+  '6': {classCol:25, numCol:26, nameCol:27, countCol:28, mgrCol:29}  // Y~AC
 };
 
 // ===== 웹앱 진입점 =====
@@ -30,11 +30,29 @@ function doPost(e) {
 
 function doGet(e) {
   const action = e.parameter && e.parameter.action;
+  const callback = e.parameter && e.parameter.callback;
+
+  function respond(obj) {
+    const json = JSON.stringify(obj);
+    if (callback) {
+      return ContentService.createTextOutput(callback + '(' + json + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (action === 'setupRoster') {
     setupLeaderRoster();
-    return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'명렬표 생성 완료'})).setMimeType(ContentService.MimeType.JSON);
+    return respond({status:'ok', message:'명렬표 생성 완료'});
   }
-  return ContentService.createTextOutput(JSON.stringify({status:'ok', message:'모둠뽑기 GAS 작동 중'})).setMimeType(ContentService.MimeType.JSON);
+  if (action === 'addManagerColumns') {
+    const result = addManagerColumns();
+    return respond({status:'ok', message: result});
+  }
+  if (action === 'roster') {
+    const marker = e.parameter.marker || '';
+    return respond({status:'ok', students: getRosterInfo(marker)});
+  }
+  return respond({status:'ok', message:'모둠뽑기 GAS 작동 중'});
 }
 
 // ===== 기록 저장 =====
@@ -178,9 +196,9 @@ function applyLeaderIncrement(sheet, cols, marker, leaders, month) {
     let matched = false;
     for (let i = startIdx; i <= endIdx; i++) {
       if (String(nameValues[i][0]).trim() === String(leaderName).trim()) {
-        const months = String(recordValues[i][0] || '').split(',').map(s => s.trim()).filter(Boolean);
+        const months = String(recordValues[i][0] || '').trim().split(/\s+/).filter(Boolean);
         if (!months.includes(token)) months.push(token);
-        recordValues[i][0] = months.join(', ');
+        recordValues[i][0] = months.join(' ');
         matched = true;
       }
     }
@@ -189,6 +207,73 @@ function applyLeaderIncrement(sheet, cols, marker, leaders, month) {
 
   sheet.getRange(2, cols.countCol, lastRow-1, 1).setValues(recordValues);
   return allMatched;
+}
+
+// ===================================================================
+// ★ 1회용 마이그레이션 - 학년별 명렬표 블록마다 '매니저' 열을 하나씩 삽입한다.
+// 실제 시트 열 삽입(insertColumnBefore)을 쓰므로 기존 데이터는 자동으로
+// 오른쪽으로 밀려서 보존된다. 이미 삽입되어 있으면(헤더가 '매니저'면) 다시 실행하지 않음.
+// ===================================================================
+function addManagerColumns() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_DETAIL);
+  if (!sheet) return '모둠뽑기_보기 시트가 없습니다.';
+
+  const grades = ['3','4','5','6'];
+  const maxNeeded = Math.max.apply(null, grades.map(g => GRADE_COLS[g].mgrCol));
+  if (sheet.getMaxColumns() < maxNeeded) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), maxNeeded - sheet.getMaxColumns());
+  }
+
+  let inserted = 0;
+  grades.forEach(grade => {
+    const cols = GRADE_COLS[grade];
+    const header = String(sheet.getRange(1, cols.mgrCol).getValue()).trim();
+    if (header === '매니저') return; // 이미 마이그레이션됨
+    sheet.insertColumnBefore(cols.mgrCol);
+    sheet.getRange(1, cols.mgrCol).setValue('매니저')
+      .setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    inserted++;
+  });
+  return inserted > 0 ? (inserted + '개 학년 블록에 매니저 열 삽입 완료') : '이미 모든 학년에 매니저 열이 있습니다.';
+}
+
+// marker(예: "3-1") 반의 명렬표를 읽어 이름별 모둠장 횟수/매니저 여부를 반환.
+// 모둠장 기록은 쉼표 없이 띄어쓰기로만 구분되어 있음("4월 5월 7월").
+function getRosterInfo(marker) {
+  const grade = marker.split('-')[0];
+  const cols = GRADE_COLS[grade];
+  if (!cols) return [];
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_DETAIL);
+  if (!sheet) return [];
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return [];
+
+  const classValues  = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+  const nameValues   = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+  const recordValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+  const mgrValues    = sheet.getRange(2, cols.mgrCol,   lastRow-1, 1).getValues();
+
+  let startIdx = -1, endIdx = classValues.length - 1;
+  for (let i = 0; i < classValues.length; i++) {
+    const val = String(classValues[i][0]).trim();
+    if (val === marker) { startIdx = i; }
+    else if (startIdx >= 0 && i > startIdx && val !== '') { endIdx = i-1; break; }
+  }
+  if (startIdx === -1) return [];
+
+  const result = [];
+  for (let i = startIdx; i <= endIdx; i++) {
+    const name = String(nameValues[i][0]).trim();
+    if (!name) continue;
+    const months = String(recordValues[i][0] || '').trim().split(/\s+/).filter(Boolean);
+    const isManager = String(mgrValues[i][0] || '').trim() !== '';
+    result.push({name, count: months.length, isManager});
+  }
+  return result;
 }
 
 // ===================================================================
@@ -242,24 +327,26 @@ function setupLeaderRoster() {
 function writeGradeRoster(sheet, cols, markers, rosterByClass) {
   const existingRecord = readExistingLeaderRecords(sheet, cols);
 
-  sheet.getRange(1, cols.classCol, 1, 4).setValues([['반','번호','이름','모둠장 기록(월)']]);
-  sheet.getRange(1, cols.classCol, 1, 4).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+  sheet.getRange(1, cols.classCol, 1, 5).setValues([['반','번호','이름','모둠장 기록(월)','매니저']]);
+  sheet.getRange(1, cols.classCol, 1, 5).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
 
   let row = 2;
   markers.forEach(marker => {
     const names = [...rosterByClass[marker]].sort();
     names.forEach((name, idx) => {
+      const existing = existingRecord[marker + '|' + name] || {};
       // 반 마커("3-1" 등)를 그대로 두면 구글시트가 날짜로 자동 변환해버리므로 텍스트 서식 강제
       sheet.getRange(row, cols.classCol).setNumberFormat('@').setValue(idx === 0 ? marker : '');
       sheet.getRange(row, cols.numCol).setValue(idx + 1);
       sheet.getRange(row, cols.nameCol).setNumberFormat('@').setValue(name);
-      sheet.getRange(row, cols.countCol).setNumberFormat('@').setValue(existingRecord[marker + '|' + name] || '');
+      sheet.getRange(row, cols.countCol).setNumberFormat('@').setValue(existing.count || '');
+      sheet.getRange(row, cols.mgrCol).setNumberFormat('@').setValue(existing.mgr || '');
       row++;
     });
   });
 }
 
-// 이미 명렬표에 있던 학생의 모둠장 기록(월)을 보존하기 위해 미리 읽어둠
+// 이미 명렬표에 있던 학생의 모둠장 기록(월)/매니저 표시를 보존하기 위해 미리 읽어둠
 function readExistingLeaderRecords(sheet, cols) {
   const lastRow = sheet.getLastRow();
   const result = {};
@@ -268,13 +355,19 @@ function readExistingLeaderRecords(sheet, cols) {
   const classValues  = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
   const nameValues   = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
   const recordValues = sheet.getRange(2, cols.countCol, lastRow-1, 1).getValues();
+  const mgrValues    = sheet.getRange(2, cols.mgrCol,   lastRow-1, 1).getValues();
 
   let curMarker = '';
   for (let i = 0; i < classValues.length; i++) {
     const marker = String(classValues[i][0]).trim();
     if (marker) curMarker = marker;
     const name = String(nameValues[i][0]).trim();
-    if (curMarker && name) result[curMarker + '|' + name] = String(recordValues[i][0] || '').trim();
+    if (curMarker && name) {
+      result[curMarker + '|' + name] = {
+        count: String(recordValues[i][0] || '').trim(),
+        mgr: String(mgrValues[i][0] || '').trim()
+      };
+    }
   }
   return result;
 }
