@@ -20,6 +20,8 @@ function doPost(e) {
     let result;
     if (action === 'save') result = saveRecord(classId, payload);
     else if (action === 'load') result = loadRecords(classId);
+    else if (action === 'bulkSetRoster') result = bulkSetRoster(payload.marker, payload.records);
+    else if (action === 'createClassRoster') result = createClassRoster(payload.marker, payload.records);
     else result = {success: false, message: '알 수 없는 액션'};
 
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
@@ -370,6 +372,89 @@ function readExistingLeaderRecords(sheet, cols) {
     }
   }
   return result;
+}
+
+// 캡처 복구용: marker 반의 학생별 모둠장 기록(월 배열)/매니저 여부를 한 번에 직접 설정(덮어쓰기).
+// records: [{name, months:[3,5,6], isManager:true}]
+function bulkSetRoster(marker, records) {
+  const grade = marker.split('-')[0];
+  const cols = GRADE_COLS[grade];
+  if (!cols) return {success:false, message:'학년 매핑을 찾을 수 없습니다: ' + marker};
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_DETAIL);
+  if (!sheet) return {success:false, message:SHEET_DETAIL + ' 시트가 없습니다.'};
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return {success:false, message:'명렬표가 비어 있습니다.'};
+
+  const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+  const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+
+  let startIdx = -1, endIdx = classValues.length - 1;
+  for (let i = 0; i < classValues.length; i++) {
+    const val = String(classValues[i][0]).trim();
+    if (val === marker) { startIdx = i; }
+    else if (startIdx >= 0 && i > startIdx && val !== '') { endIdx = i-1; break; }
+  }
+  if (startIdx === -1) return {success:false, message:marker + ' 반을 명렬표에서 찾을 수 없습니다.'};
+
+  const countRange = sheet.getRange(2, cols.countCol, lastRow-1, 1);
+  const mgrRange   = sheet.getRange(2, cols.mgrCol,   lastRow-1, 1);
+  const countVals  = countRange.getValues();
+  const mgrVals    = mgrRange.getValues();
+
+  const unmatched = [];
+  records.forEach(r => {
+    let found = false;
+    for (let i = startIdx; i <= endIdx; i++) {
+      if (String(nameValues[i][0]).trim() === String(r.name).trim()) {
+        countVals[i][0] = (r.months && r.months.length) ? r.months.map(m => m + '월').join(' ') : '';
+        mgrVals[i][0] = r.isManager ? '매니저' : '';
+        found = true;
+      }
+    }
+    if (!found) unmatched.push(r.name);
+  });
+
+  countRange.setNumberFormat('@').setValues(countVals);
+  mgrRange.setNumberFormat('@').setValues(mgrVals);
+  return {success:true, unmatched};
+}
+
+// 캡처 복구용: 해당 학년 블록에 marker 반이 명렬표에 아직 없을 때, 새 반을 통째로 추가.
+// records: [{name, months:[3,5,6], isManager:true}] (번호는 배열 순서대로 1부터 자동 부여)
+function createClassRoster(marker, records) {
+  const grade = marker.split('-')[0];
+  const cols = GRADE_COLS[grade];
+  if (!cols) return {success:false, message:'학년 매핑을 찾을 수 없습니다: ' + marker};
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEET_DETAIL);
+  if (!sheet) return {success:false, message:SHEET_DETAIL + ' 시트가 없습니다.'};
+
+  const lastRow = sheet.getLastRow();
+  let insertAt = 2;
+  if (lastRow >= 2) {
+    const classValues = sheet.getRange(2, cols.classCol, lastRow-1, 1).getValues();
+    const nameValues  = sheet.getRange(2, cols.nameCol,  lastRow-1, 1).getValues();
+    for (let i = 0; i < classValues.length; i++) {
+      const marker2 = String(classValues[i][0]).trim();
+      if (marker2 === marker) return {success:false, message:marker + ' 반이 이미 명렬표에 있습니다. bulkSetRoster를 사용하세요.'};
+      if (marker2 || String(nameValues[i][0]).trim()) insertAt = 2 + i + 1;
+    }
+  }
+
+  records.forEach((r, idx) => {
+    const row = insertAt + idx;
+    sheet.getRange(row, cols.classCol).setNumberFormat('@').setValue(idx === 0 ? marker : '');
+    sheet.getRange(row, cols.numCol).setValue(idx + 1);
+    sheet.getRange(row, cols.nameCol).setNumberFormat('@').setValue(r.name);
+    sheet.getRange(row, cols.countCol).setNumberFormat('@').setValue((r.months && r.months.length) ? r.months.map(m => m + '월').join(' ') : '');
+    sheet.getRange(row, cols.mgrCol).setNumberFormat('@').setValue(r.isManager ? '매니저' : '');
+  });
+
+  return {success:true, added: records.length};
 }
 
 // ===== 기록 불러오기 =====
