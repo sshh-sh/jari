@@ -193,11 +193,16 @@ textarea.name-input:focus { border-color: var(--accent); }
 .mc6{background:#6B2D82} .mc7{background:#1A6B6B} .mc8{background:#8B3A3A} .mc9{background:#2D5A8B}
 
 /* ===== 결과 인쇄 영역 ===== */
+#print-multi { display: none; }
 @media print {
   body { background: white; }
   .topbar, .tabbar, .result-actions, .chalkboard-bar { display: none !important; }
   .modum-grid { break-inside: avoid; }
   .modum-card, .modum-card.popped { opacity: 1 !important; animation: none !important; transform: none !important; }
+  body.multi-print-mode .app, body.multi-print-mode #app-footer { display: none !important; }
+  body.multi-print-mode #print-multi { display: block !important; }
+  .print-class-block { padding: 12px 24px; page-break-after: always; }
+  .print-class-block:last-child { page-break-after: auto; }
 }
 
 /* ===== 로그인 ===== */
@@ -286,6 +291,13 @@ textarea.name-input:focus { border-color: var(--accent); }
     </div>
     <div class="modal-body" id="inner-history">
       <div style="font-size:16px;color:var(--text2);margin-bottom:16px">지난 배치 기록을 참고해 이번 달 모둠이 겹치지 않게 구성됩니다.</div>
+      <div id="history-toolbar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);cursor:pointer;">
+          <input type="checkbox" id="history-select-all" onchange="toggleAllHistoryCheck(this.checked)" style="width:16px;height:16px;cursor:pointer;">
+          전체 선택
+        </label>
+        <button onclick="printSelectedHistory()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent);padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit"><i class="ti ti-printer"></i> 선택 인쇄</button>
+      </div>
       <div id="history-list">
         <div style="font-size:16px;color:var(--text2);text-align:center;padding:24px">저장된 기록이 없습니다.</div>
       </div>
@@ -519,9 +531,11 @@ textarea.name-input:focus { border-color: var(--accent); }
   </div>
 </div>
 
+<div id="print-multi"></div>
+
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v17
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v18
 </footer>
 
 <script type="module">
@@ -1072,8 +1086,9 @@ function reshuffleModum() {
 ==================================================== */
 function renderResult(result) {
   const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
+  const isHistorical = !!result.date;
+  const month = isHistorical ? result.month : now.getMonth() + 1;
+  const year = isHistorical ? result.year : now.getFullYear();
   const cls = getCurrentClass();
   const clsName = cls ? cls.name : '';
   loadRosterStars(clsName);
@@ -1081,8 +1096,8 @@ function renderResult(result) {
 
   document.getElementById('chalkboard-info').innerHTML =
     `<strong style="color:#7ec8a8">${clsName}</strong> &nbsp;·&nbsp; ${year}년 ${month}월 모둠 배치 &nbsp;·&nbsp; 과거 기록 반영 완료 &nbsp;·&nbsp; 이 결과를 저장하면 다음 달 배치 시 자동으로 참고합니다`;
-  const day = now.getDate();
-  document.getElementById('result-title').innerHTML = `<span style="font-size:1.25em;">${clsName}</span> 모둠 배치 결과 (${month}월 ${day}일) 🎉`;
+  const dateLabel = isHistorical ? result.date : `${month}월 ${now.getDate()}일`;
+  document.getElementById('result-title').innerHTML = `<span style="font-size:1.25em;">${clsName}</span> 모둠 배치 결과 (${dateLabel}) 🎉`;
   const overlapText = typeof result.overlapCount === 'number' ? ` · 겹침 ${result.overlapCount}건` : '';
   document.getElementById('result-meta').textContent =
     `${result.groups.length}모둠 · 총 ${totalStudents}명${overlapText}`;
@@ -1300,16 +1315,62 @@ function renderHistory() {
   }
   list.innerHTML = allRecords.map((r, idx) => `
     <div class="history-row">
-      <div>
-        <div class="history-name">${r.className} ${r.month}월 배치기록</div>
-        <div class="history-detail">${r.groups.length}모둠 · ${r.groups.reduce((a,g)=>a+g.students.length,0)}명 · ${r.date}</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <label style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;cursor:pointer;">
+        <input type="checkbox" class="history-check" data-classid="${r.classId}" data-year="${r.year}" data-month="${r.month}" style="width:18px;height:18px;flex-shrink:0;cursor:pointer;">
+        <div style="min-width:0;">
+          <div class="history-name">${r.className} ${r.month}월 배치기록</div>
+          <div class="history-detail">${r.groups.length}모둠 · ${r.groups.reduce((a,g)=>a+g.students.length,0)}명 · ${r.date}</div>
+        </div>
+      </label>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="history-view-btn" onclick="viewHistory('${r.classId}',${r.year},${r.month})">보기</button>
         <button onclick="deleteHistory('${r.classId}',${r.year},${r.month})" style="background:none;border:1px solid #e05a2b;color:#e05a2b;padding:7px 14px;border-radius:8px;font-size:15px;cursor:pointer;font-family:inherit">삭제</button>
       </div>
     </div>`).join('');
 }
+function toggleAllHistoryCheck(checked) {
+  document.querySelectorAll('.history-check').forEach(cb => cb.checked = checked);
+}
+function buildPrintGroupCardsHtml(groups, leaders) {
+  const leaderSet = new Set(leaders || []);
+  return groups.map((group, i) => {
+    const colorClass = COLORS[i % COLORS.length];
+    const studentsHtml = group.students.map(s => `
+      <div class="student-row${leaderSet.has(s) ? ' is-leader' : ''}">
+        <span class="student-name">${s}</span>
+        <span class="leader-star">⭐</span>
+      </div>`).join('');
+    return `<div class="modum-card">
+      <div class="modum-card-header ${colorClass}">
+        <span class="modum-card-header-title">${group.name}</span>
+        <span class="modum-card-header-count">${group.students.length}명</span>
+      </div>
+      <div class="modum-card-body">${studentsHtml}</div>
+    </div>`;
+  }).join('');
+}
+function printSelectedHistory() {
+  const checked = [...document.querySelectorAll('.history-check:checked')];
+  if (!checked.length) { showToast('인쇄할 기록을 선택하세요.', 'warning'); return; }
+  const container = document.getElementById('print-multi');
+  container.innerHTML = checked.map(cb => {
+    const {classid: classId, year, month} = cb.dataset;
+    const record = (state.history[classId] || []).find(r => String(r.year) === year && String(r.month) === month);
+    if (!record) return '';
+    const cls = state.classes.find(c => c.id === classId);
+    const clsName = cls ? cls.name : '';
+    const totalStudents = record.groups.reduce((a, g) => a + g.students.length, 0);
+    return `<div class="print-class-block">
+      <div class="result-title"><span style="font-size:1.25em;">${clsName}</span> 모둠 배치 결과 (${record.date}) 🎉</div>
+      <div class="result-meta">${record.groups.length}모둠 · 총 ${totalStudents}명</div>
+      <div class="modum-grid" style="grid-template-columns:repeat(${record.groups.length},1fr);">${buildPrintGroupCardsHtml(record.groups, record.leaders)}</div>
+    </div>`;
+  }).join('');
+  closeModal('teacher-modal');
+  document.body.classList.add('multi-print-mode');
+  window.print();
+}
+window.addEventListener('afterprint', () => document.body.classList.remove('multi-print-mode'));
 function viewHistory(classId, year, month) {
   const records = state.history[classId] || [];
   const record = records.find(r => String(r.year) === String(year) && String(r.month) === String(month));
@@ -1320,6 +1381,7 @@ function viewHistory(classId, year, month) {
   document.querySelectorAll('.tab')[1].classList.add('active');
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-result').classList.add('active');
+  state.currentClassId = classId;
   state.lastResult = record;
   state.leaders = new Set(record.leaders || []);
   renderResult(record);
