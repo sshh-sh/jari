@@ -520,7 +520,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v13
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v14
 </footer>
 
 <script type="module">
@@ -1081,7 +1081,7 @@ function renderResult(result) {
   document.getElementById('chalkboard-info').innerHTML =
     `<strong style="color:#7ec8a8">${clsName}</strong> &nbsp;·&nbsp; ${year}년 ${month}월 모둠 배치 &nbsp;·&nbsp; 과거 기록 반영 완료 &nbsp;·&nbsp; 이 결과를 저장하면 다음 달 배치 시 자동으로 참고합니다`;
   const day = now.getDate();
-  document.getElementById('result-title').textContent = `모둠 배치 결과 (${month}월 ${day}일) 🎉`;
+  document.getElementById('result-title').innerHTML = `<span style="font-size:1.25em;">${clsName}</span> 모둠 배치 결과 (${month}월 ${day}일) 🎉`;
   const overlapText = typeof result.overlapCount === 'number' ? ` · 겹침 ${result.overlapCount}건` : '';
   document.getElementById('result-meta').textContent =
     `${result.groups.length}모둠 · 총 ${totalStudents}명${overlapText}`;
