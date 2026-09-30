@@ -226,6 +226,20 @@ textarea.name-input:focus { border-color: var(--accent); }
 .privacy-confirm-btn { width:100%; padding:15px; background:var(--accent); color:white; border:none; border-radius:var(--radius-sm); font-family:inherit; font-size:17px; font-weight:700; cursor:pointer; transition:background 0.15s; }
 .privacy-confirm-btn:hover { background:var(--accent-dark); }
 .privacy-box-footer { padding:14px 26px 22px; display:flex; flex-direction:column; gap:10px; }
+.privacy-demo-btn { width:100%; padding:12px; background:var(--surface2); color:var(--accent-dark); border:1px solid var(--accent); border-radius:var(--radius-sm); font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; }
+.privacy-demo-btn:hover { background:var(--accent-light); }
+/* ===== 체험 모드 ===== */
+.demo-btn { display: inline-flex; align-items: center; gap: 5px; margin-left: 10px; vertical-align: middle; padding: 4px 12px; border-radius: var(--radius-sm); border: 1px solid #E0A100; background: #FFF6D6; color: #7A5600; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.demo-btn:hover { background: #FFEBA8; }
+#demo-banner { display: none; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 7px 14px; margin-bottom: 8px; background: #FFF6D6; border: 1px solid #E0A100; border-radius: var(--radius-sm); color: #7A5600; font-size: 15px; }
+#demo-banner button { padding: 4px 12px; border-radius: 6px; border: 1px solid #7A5600; background: #fff; color: #7A5600; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+body.demo-mode #demo-banner { display: flex; }
+body.demo-mode .demo-btn, body.demo-mode #login-btn { display: none; }
+body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
+@media (max-width: 900px) {
+  .topbar { flex-wrap: wrap; gap: 8px; }
+}
+@media print { #demo-banner { display: none !important; } }
 </style>
 </head>
 <body>
@@ -266,6 +280,7 @@ textarea.name-input:focus { border-color: var(--accent); }
     <div class="privacy-box-footer">
       <div class="privacy-note">본 소프트웨어는 만 14세 미만 아동을 대상으로 하며,<br>담임교사 및 보호자 동의 하에 사용됩니다</div>
       <button class="privacy-confirm-btn" onclick="agreePrivacy()">확인했습니다 ✓</button>
+      <button class="privacy-demo-btn" onclick="startDemo()">🧪 가상 데이터로 먼저 체험해 보기</button>
     </div>
   </div>
 </div>
@@ -440,6 +455,11 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 <!-- 앱 본체 -->
 <div class="app">
+  <!-- 체험 모드 안내 -->
+  <div id="demo-banner">
+    <span>🧪 <strong>체험 모드</strong> · 가상의 학급·학생 데이터예요. 입력하거나 저장한 내용은 어디에도 남지 않아요.</span>
+    <button onclick="endDemo()">체험 끝내기</button>
+  </div>
   <!-- 상단바 -->
   <div class="topbar">
     <div class="logo" onclick="location.reload()" title="새로고침">
@@ -535,7 +555,8 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v18
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v2
+  <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
 <script type="module">
@@ -595,9 +616,64 @@ let state = {
 };
 
 /* ====================================================
+   체험 모드 (?demo=1) — 가상 데이터, 어디에도 저장하지 않음
+==================================================== */
+const DEMO_MODE = new URLSearchParams(location.search).has('demo');
+
+function startDemo() { location.href = location.pathname + '?demo=1'; }
+function endDemo() { location.href = location.pathname; }
+
+const DEMO_STARS = {
+  '김민준': {count: 2, isManager: false}, '이서연': {count: 1, isManager: true},
+  '박지호': {count: 1, isManager: false}, '최하은': {count: 3, isManager: false},
+  '정도윤': {count: 0, isManager: true},  '윤지아': {count: 2, isManager: false},
+  '강시우': {count: 1, isManager: false}, '한예린': {count: 1, isManager: false},
+  '오은우': {count: 1, isManager: false}, '신가은': {count: 2, isManager: false},
+};
+
+function buildDemoState() {
+  const class1 = ['김민준','이서연','박지호','최하은','정도윤','강서윤','조하준','윤지아','장현우','임수아',
+                  '한유준','오채원','서준서','신예린','권도현','황지유','안시우','송하린','전건우','홍다은',
+                  '문은우','양소율','배지환','백서아'];
+  const class2 = ['강시우','한예린','오은우','신가은','류준혁','남서진','노하윤','심태윤','곽나은','변주원',
+                  '유지안','구민서','나윤호','민채은','진우진','지수빈','엄태오','채아린','원선우','천다인',
+                  '방이안','공하율'];
+  const now = new Date();
+  // 최근 3개월치 가상 배치 기록 (4학년 2반) — 매달 다른 순서로 4명씩 묶음
+  const history = [];
+  for (let back = 3; back >= 1; back--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - back, 5);
+    const step = back * 5 + 1; // 24와 서로소 → 매달 다른 배열
+    const order = class1.map((_, i) => class1[(i * step) % class1.length]);
+    const groups = Array.from({length: 6}, (_, g) => ({
+      idx: g, name: `${g+1}모둠`, maxSize: 4, students: order.slice(g * 4, g * 4 + 4)
+    }));
+    history.push({
+      month: d.getMonth() + 1, year: d.getFullYear(), date: d.toLocaleDateString('ko-KR'),
+      savedAt: d.getTime(), groups, leaders: groups.map(g => g.students[0])
+    });
+  }
+  return {
+    classes: [
+      {id: 'demo1', name: '4학년 2반', students: class1.join('\n'), modumCount: 6, modumSizes: [4,4,4,4,4,4]},
+      {id: 'demo2', name: '5학년 1반', students: class2.join('\n'), modumCount: 5, modumSizes: [5,5,4,4,4]},
+    ],
+    currentClassId: 'demo1',
+    modumCount: 6,
+    modumSizes: [4,4,4,4,4,4],
+    fixedStudents: [{name: '정도윤', modumIdx: 0, reason: '시력 (앞자리)'}],
+    history: {demo1: history},
+    lastResult: null,
+    gasUrl: '',
+    rosterStars: {},
+  };
+}
+
+/* ====================================================
    저장/불러오기 (Firebase 우선, 없으면 localStorage)
 ==================================================== */
 function saveState() {
+  if (DEMO_MODE) return; // 체험 모드: 브라우저·Firebase 어디에도 저장 안 함
   localStorage.setItem('modum_state', JSON.stringify(state));
   if (window._fbUser) {
     const data = JSON.parse(JSON.stringify(state));
@@ -606,6 +682,7 @@ function saveState() {
   }
 }
 function loadState() {
+  if (DEMO_MODE) { Object.assign(state, buildDemoState()); return; }
   const saved = localStorage.getItem('modum_state');
   if (saved) {
     try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
@@ -642,6 +719,7 @@ function marchReset() {
    Firebase 로그인/로그아웃
 ==================================================== */
 function handleLoginClick() {
+  if (DEMO_MODE) { showToast('체험 모드에서는 로그인할 수 없어요.', 'warning'); return; }
   if (window._fbUser) {
     if (confirm('로그아웃 하시겠어요?')) window._fb.signOut();
   } else {
@@ -649,6 +727,7 @@ function handleLoginClick() {
   }
 }
 window.onAuthReady = function(user) {
+  if (DEMO_MODE) return; // 체험 모드: 로그인 상태여도 실제 데이터 불러오지 않음
   const btn = document.getElementById('login-btn');
   const txt = document.getElementById('login-btn-text');
   if (user) {
@@ -673,7 +752,10 @@ function agreePrivacy() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (!localStorage.getItem('privacy_agreed')) {
+  if (DEMO_MODE) {
+    document.body.classList.add('demo-mode');
+    document.getElementById('gas-status-text').textContent = '체험 모드 (저장 안 됨)';
+  } else if (!localStorage.getItem('privacy_agreed')) {
     document.getElementById('privacy-modal').classList.add('show');
   }
   loadState();
@@ -1150,6 +1232,8 @@ function jsonpFetch(url) {
 }
 
 function loadRosterStars(clsName) {
+  // 체험 모드: 가상 별 데이터 — renderResult가 카드를 다 그린 뒤 적용되도록 마이크로태스크로 미룸
+  if (DEMO_MODE) { state.rosterStars = DEMO_STARS; Promise.resolve().then(applyRosterStars); return; }
   if (!state.gasUrl || !clsName) { state.rosterStars = {}; applyRosterStars(); return; }
   const gradeMatch = clsName.match(/(\d+)학년/);
   const classNumMatch = clsName.match(/(\d+)반/);
@@ -1233,13 +1317,14 @@ function saveResult() {
   const cls = getCurrentClass();
   if (state.gasUrl) sendToGas('save', {...record, className: cls ? cls.name : state.currentClassId, leaders});
   renderHistory();
-  showToast('✅ 저장되었습니다!', 'success');
+  showToast(DEMO_MODE ? '✅ 저장되었습니다! (체험 모드라 새로고침하면 사라져요)' : '✅ 저장되었습니다!', 'success');
 }
 
 /* ====================================================
    GAS 연동
 ==================================================== */
 function saveGasUrl() {
+  if (DEMO_MODE) { showToast('체험 모드에서는 구글 시트를 연결할 수 없어요.', 'warning'); return; }
   const url = document.getElementById('gas-url-input').value.trim();
   if (!url) { showToast('URL을 입력해 주세요.', 'warning'); return; }
   state.gasUrl = url;
@@ -1250,7 +1335,7 @@ function saveGasUrl() {
   showToast('✅ 구글 시트가 연결되었습니다!', 'success');
 }
 async function sendToGas(action, data, classId) {
-  if (!state.gasUrl) return false;
+  if (DEMO_MODE || !state.gasUrl) return false;
   try {
     await fetch(state.gasUrl, {
       method: 'POST',
