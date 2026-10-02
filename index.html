@@ -55,23 +55,23 @@ body:has(#page-result.active) #app-footer { display: none; }
 
 /* ===== 설정 탭 ===== */
 #page-setup.active { display: flex; flex-direction: column; height: calc(100vh - 215px); }
-.setup-grid { display: grid; grid-template-columns: 1fr 4fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
+.setup-grid { display: grid; grid-template-columns: 496px 1fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
 .setup-grid > .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 textarea.name-input { width: 100%; flex: 1; min-height: 340px; max-height: 600px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 20px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 2.2; outline: none; transition: border-color 0.15s; }
 textarea.name-input:focus { border-color: var(--accent); }
-.name-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow-x: auto; margin-bottom: 14px; }
+.name-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow-x: auto; margin-bottom: 14px; }
 .name-toolbar-label { font-size: 16px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .name-toolbar-label i { color: var(--accent); font-size: 18px; }
 .name-toolbar-label #name-count { font-size: 18px; font-weight: 700; color: var(--accent); }
-.toolbar-btn { height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-size: 15px; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
+.toolbar-btn { height: 36px; padding: 0 11px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-size: 15px; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: background 0.15s; flex-shrink: 0; }
 .toolbar-btn:hover { background: var(--border); }
 .toolbar-btn.accent { color: var(--accent); background: var(--surface); border-color: var(--accent); }
 .toolbar-btn.accent:hover { background: var(--accent-light); }
 .toolbar-divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
-.class-select-btn { height: 36px; border: 2px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent-light); color: var(--accent-dark); font-family: inherit; font-size: 15px; font-weight: 700; padding: 0 10px; outline: none; cursor: pointer; flex-shrink: 0; max-width: 150px; }
+.class-select-btn { height: 36px; border: 2px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent-light); color: var(--accent-dark); font-family: inherit; font-size: 15px; font-weight: 700; padding: 0 8px; outline: none; cursor: pointer; flex-shrink: 0; max-width: 150px; }
 .bulk-io-group { display: flex; align-items: stretch; height: 36px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); flex-shrink: 0; margin-left: auto; }
-.bulk-io-label { display: flex; align-items: center; padding: 0 10px; font-size: 14px; color: var(--text); white-space: nowrap; }
-.bulk-io-btn { display: flex; align-items: center; justify-content: center; width: 36px; border: none; border-left: 1px solid var(--border); background: var(--surface2); color: var(--accent); cursor: pointer; font-size: 16px; margin: 0; }
+.bulk-io-label { display: flex; align-items: center; padding: 0 8px; font-size: 14px; color: var(--text); white-space: nowrap; }
+.bulk-io-btn { display: flex; align-items: center; justify-content: center; width: 32px; border: none; border-left: 1px solid var(--border); background: var(--surface2); color: var(--accent); cursor: pointer; font-size: 16px; margin: 0; }
 .bulk-io-btn:hover { background: var(--border); }
 .bulk-io-btn input { display: none; }
 .modum-card-layout { display: flex; gap: 16px; flex: 1; min-height: 0; }
@@ -85,8 +85,8 @@ textarea.name-input:focus { border-color: var(--accent); }
 .modum-per-section { margin-top: 14px; }
 .modum-per-label { font-size: 17px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
 .modum-per-list { display: flex; flex-direction: column; gap: 0; }
-.modum-per-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 4px; border-bottom: 1px solid var(--border); }
-.modum-per-name { display: flex; align-items: center; gap: 12px; font-size: 19px; color: var(--text); }
+.modum-per-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; padding: 12px 4px; border-bottom: 1px solid var(--border); }
+.modum-per-name { display: flex; align-items: center; gap: 10px; font-size: 17px; color: var(--text); }
 .modum-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
 .counter { display: flex; align-items: center; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); flex-shrink: 0; }
 .counter button { border: none; background: none; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
@@ -97,7 +97,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 /* ===== 생성 버튼 (이미지) ===== */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
-.generate-btn-image { width: 170px; flex-shrink: 0; align-self: stretch; padding: 0; border: none; border-radius: var(--radius); overflow: hidden; cursor: pointer; box-shadow: 0 4px 16px rgba(83,74,183,0.25); transition: transform 0.15s, box-shadow 0.15s; background: none; }
+.generate-btn-image { flex: 1; min-width: 0; align-self: stretch; padding: 0; border: none; border-radius: var(--radius); overflow: hidden; cursor: pointer; box-shadow: 0 4px 16px rgba(83,74,183,0.25); transition: transform 0.15s, box-shadow 0.15s; background: none; }
 .generate-btn-image:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(83,74,183,0.35); }
 .generate-btn-image:active { transform: translateY(0); }
 .generate-btn-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
@@ -582,7 +582,7 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v5
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v6
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -792,7 +792,10 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!state.classes.length) {
     state.classes = [{id: 'c1', name: '3학년 1반'}];
     state.currentClassId = 'c1';
-    saveState();
+    // 로그인된 상태면 Firebase에서 기존 데이터를 아직 불러오는 중일 수 있으므로
+    // 여기서 저장하면 로그인 전 생성된 빈 기본 학급으로 클라우드 데이터를 덮어쓸 위험이 있음.
+    // 로그인 안 된 경우에만 바로 저장하고, 로그인된 경우는 loadFromFirebase 완료 후 자연스럽게 저장되게 둠.
+    if (!window._fbUser) saveState();
   }
   if (!state.currentClassId) state.currentClassId = state.classes[0].id;
   populateModumCountSelect();
