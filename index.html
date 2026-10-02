@@ -121,6 +121,8 @@ textarea.name-input:focus { border-color: var(--accent); }
 .chalkboard-bar { background: #1e3a30; border-radius: var(--radius-sm); padding: 10px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; color: #7ec8a8; font-size: 15px; flex-wrap: wrap; }
 .chalkboard-dot { width: 10px; height: 10px; border-radius: 50%; background: #4ecb8d; flex-shrink: 0; }
 .modum-grid { display: grid; gap: 10px; }
+.history-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.history-section-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .modum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); opacity: 0; display: flex; flex-direction: column; min-width: 0; }
 @keyframes cardPop { 0% { opacity: 0; transform: scale(0.88) translateY(14px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
 .modum-card.popped { animation: cardPop 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards; }
@@ -147,9 +149,6 @@ textarea.name-input:focus { border-color: var(--accent); }
 .modal-title { font-size: 20px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 10px; }
 .modal-title i { color: var(--accent); font-size: 22px; }
 .modal-close { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 26px; display: flex; padding: 2px; }
-.inner-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 26px; flex-shrink: 0; }
-.inner-tab { padding: 14px 20px; font-size: 17px; font-family: inherit; cursor: pointer; color: var(--text2); border: none; background: none; border-bottom: 2px solid transparent; display: flex; align-items: center; gap: 7px; transition: all 0.15s; }
-.inner-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
 .modal-body { padding: 22px 26px; overflow-y: auto; }
 .history-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .history-row:last-child { border-bottom: none; }
@@ -211,7 +210,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 #print-multi { display: none; }
 @media print {
   body { background: white; }
-  .topbar, .tabbar, .result-actions, .chalkboard-bar { display: none !important; }
+  .topbar, .tabbar, .result-actions, .chalkboard-bar, .history-section { display: none !important; }
   .modum-grid { break-inside: avoid; }
   .modum-card, .modum-card.popped { opacity: 1 !important; animation: none !important; transform: none !important; }
   body.multi-print-mode .app, body.multi-print-mode #app-footer { display: none !important; }
@@ -221,11 +220,14 @@ textarea.name-input:focus { border-color: var(--accent); }
 }
 
 /* ===== 로그인 ===== */
-.login-btn { display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 16px; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.login-btn { display: flex; align-items: center; height: 34px; gap: 6px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
 .login-btn:hover { border-color: var(--accent); background: var(--accent-light); }
-.login-btn img { width: 20px; height: 20px; border-radius: 50%; }
 .login-btn.logged-in { background: var(--accent-light); border-color: var(--accent); color: var(--accent-dark); }
-.sync-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #e6f5ee; color: #0e6b43; font-weight: 500; }
+.login-avatar { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; background: var(--accent); flex-shrink: 0; overflow: hidden; }
+.login-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.login-btn:not(.logged-in) .login-avatar { background: transparent; }
+.gas-status-pill { display: flex; align-items: center; height: 34px; gap: 6px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.gas-status-pill:hover { border-color: var(--accent); background: var(--accent-light); }
 /* ===== 개인정보 모달 ===== */
 #privacy-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2000; align-items:center; justify-content:center; padding:20px; }
 #privacy-modal.show { display:flex; }
@@ -308,30 +310,12 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
   <div class="loading-sub">지난 달 기록 확인 중이에요!</div>
 </div>
 
-<!-- 선생님 전용 모달 -->
+<!-- 선생님 전용 모달 (고정 학생 설정) -->
 <div class="modal-backdrop" id="teacher-modal">
   <div class="modal">
     <div class="modal-header">
-      <div class="modal-title"><i class="ti ti-key"></i> 선생님 전용</div>
+      <div class="modal-title"><i class="ti ti-key"></i> 고정 학생 설정</div>
       <button class="modal-close" onclick="closeModal('teacher-modal')"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="inner-tabs">
-      <button class="inner-tab active" onclick="switchInner('history',this)"><i class="ti ti-history"></i> 과거 배치 기록</button>
-      <button class="inner-tab" onclick="switchInner('fixed',this)"><i class="ti ti-pin"></i> 고정 학생 설정</button>
-    </div>
-    <div class="modal-body" id="inner-history">
-      <div style="font-size:16px;color:var(--text2);margin-bottom:16px">지난 배치 기록을 참고해 이번 달 모둠이 겹치지 않게 구성됩니다.</div>
-      <div id="history-toolbar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);cursor:pointer;">
-          <input type="checkbox" id="history-select-all" onchange="toggleAllHistoryCheck(this.checked)" style="width:16px;height:16px;cursor:pointer;">
-          전체 선택
-        </label>
-        <button onclick="printSelectedHistory()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent);padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit"><i class="ti ti-printer"></i> 선택 인쇄</button>
-      </div>
-      <div id="history-list">
-        <div style="font-size:16px;color:var(--text2);text-align:center;padding:24px">저장된 기록이 없습니다.</div>
-      </div>
-      <div class="info-box"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:15px"></i> 3월에 자동 초기화되며, 최대 12개월치 기록이 유지됩니다.</div>
     </div>
     <div class="modal-body" id="inner-fixed">
       <div style="font-size:16px;color:var(--text2);margin-bottom:16px">특별 지도가 필요한 학생을 특정 모둠에 고정합니다. 아이들에게 보이지 않아요.</div>
@@ -484,13 +468,12 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <div id="gas-status-wrap" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);">
-        <i class="ti ti-cloud" style="font-size:14px;"></i>
+      <button class="gas-status-pill" id="gas-status-wrap" onclick="openModal('gas-modal')" title="구글 시트 연결 설정">
+        <i class="ti ti-cloud" style="font-size:14px;color:var(--text2);"></i>
         <span id="gas-status-text">구글 시트 미연결</span>
-        <button onclick="openModal('gas-modal')" style="font-size:11px;color:var(--accent);background:none;border:none;padding:0 0 0 4px;cursor:pointer;font-family:inherit;">설정</button>
-      </div>
+      </button>
       <button class="login-btn" id="login-btn" onclick="handleLoginClick()">
-        <i class="ti ti-brand-google" style="color:#4285F4"></i>
+        <span id="login-btn-avatar" class="login-avatar"><i class="ti ti-brand-google" style="color:#4285F4;font-size:16px;"></i></span>
         <span id="login-btn-text">구글 로그인</span>
       </button>
     </div>
@@ -565,6 +548,22 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
       </div>
     </div>
     <div class="modum-grid" id="modum-grid"></div>
+
+    <div class="history-section">
+      <div class="history-section-title">지난 배치 기록</div>
+      <div style="font-size:15px;color:var(--text2);margin-bottom:14px">지난 배치 기록을 참고해 이번 달 모둠이 겹치지 않게 구성됩니다.</div>
+      <div id="history-toolbar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);cursor:pointer;">
+          <input type="checkbox" id="history-select-all" onchange="toggleAllHistoryCheck(this.checked)" style="width:16px;height:16px;cursor:pointer;">
+          전체 선택
+        </label>
+        <button onclick="printSelectedHistory()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent);padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit"><i class="ti ti-printer"></i> 선택 인쇄</button>
+      </div>
+      <div id="history-list">
+        <div style="font-size:16px;color:var(--text2);text-align:center;padding:24px">저장된 기록이 없습니다.</div>
+      </div>
+      <div class="info-box"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:15px"></i> 3월에 자동 초기화되며, 최대 12개월치 기록이 유지됩니다.</div>
+    </div>
   </div>
 </div>
 
@@ -572,7 +571,7 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v3
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v4
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -746,17 +745,20 @@ function handleLoginClick() {
 window.onAuthReady = function(user) {
   if (DEMO_MODE) return; // 체험 모드: 로그인 상태여도 실제 데이터 불러오지 않음
   const btn = document.getElementById('login-btn');
+  const avatar = document.getElementById('login-btn-avatar');
   const txt = document.getElementById('login-btn-text');
   if (user) {
     btn.classList.add('logged-in');
     const name = user.displayName ? user.displayName.split(' ')[0] : '선생님';
-    txt.innerHTML = `${name} <span class="sync-badge">동기화 중</span>`;
+    avatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" alt="">` : name.charAt(0);
+    txt.textContent = '동기화 중';
     loadFromFirebase(user.uid).then(() => {
-      txt.innerHTML = `${name} <span class="sync-badge">동기화 완료 ✓</span>`;
+      txt.textContent = '동기화 완료';
     });
   } else {
     btn.classList.remove('logged-in');
-    txt.innerHTML = '구글 로그인';
+    avatar.innerHTML = '<i class="ti ti-brand-google" style="color:#4285F4;font-size:16px;"></i>';
+    txt.textContent = '구글 로그인';
   }
 };
 
@@ -790,7 +792,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // GAS URL
   if (state.gasUrl) {
     document.getElementById('gas-url-input').value = state.gasUrl;
-    document.getElementById('gas-status-text').textContent = '구글 시트 연결됨 ✓';
+    document.getElementById('gas-status-text').textContent = '구글 시트 연결됨';
     document.getElementById('gas-status-text').style.color = '#1D9E75';
   }
 });
@@ -1346,7 +1348,7 @@ function saveGasUrl() {
   if (!url) { showToast('URL을 입력해 주세요.', 'warning'); return; }
   state.gasUrl = url;
   saveState();
-  document.getElementById('gas-status-text').textContent = '구글 시트 연결됨 ✓';
+  document.getElementById('gas-status-text').textContent = '구글 시트 연결됨';
   document.getElementById('gas-status-text').style.color = '#1D9E75';
   closeModal('gas-modal');
   showToast('✅ 구글 시트가 연결되었습니다!', 'success');
@@ -1594,16 +1596,6 @@ function switchTab(id, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('page-' + id).classList.add('active');
-}
-
-/* ====================================================
-   내부 탭 전환
-==================================================== */
-function switchInner(id, el) {
-  document.querySelectorAll('.inner-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('inner-history').style.display = id === 'history' ? 'block' : 'none';
-  document.getElementById('inner-fixed').style.display   = id === 'fixed'   ? 'block' : 'none';
 }
 
 /* ====================================================
