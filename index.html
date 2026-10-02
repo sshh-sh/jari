@@ -55,7 +55,7 @@ body:has(#page-result.active) #app-footer { display: none; }
 
 /* ===== 설정 탭 ===== */
 #page-setup.active { display: flex; flex-direction: column; height: calc(100vh - 215px); }
-.setup-grid { display: grid; grid-template-columns: 2fr 3fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
+.setup-grid { display: grid; grid-template-columns: 1fr 4fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
 .setup-grid > .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 textarea.name-input { width: 100%; flex: 1; min-height: 340px; max-height: 600px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 20px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 2.2; outline: none; transition: border-color 0.15s; }
 textarea.name-input:focus { border-color: var(--accent); }
@@ -74,14 +74,17 @@ textarea.name-input:focus { border-color: var(--accent); }
 .bulk-io-btn { display: flex; align-items: center; justify-content: center; width: 36px; border: none; border-left: 1px solid var(--border); background: var(--surface2); color: var(--accent); cursor: pointer; font-size: 16px; margin: 0; }
 .bulk-io-btn:hover { background: var(--border); }
 .bulk-io-btn input { display: none; }
+.modum-card-layout { display: flex; gap: 16px; flex: 1; min-height: 0; }
+.modum-card-main { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; min-width: 0; }
 .modum-setting-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .counter-group { display: flex; align-items: center; gap: 8px; }
 .counter-group label { font-size: 15px; color: var(--text2); }
 .modum-count-select { height: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface2); color: var(--text); font-family: inherit; font-size: 18px; font-weight: 700; padding: 0 14px; outline: none; cursor: pointer; }
+.modum-count-suffix { font-size: 16px; color: var(--text); margin-left: -4px; }
 .total-badge { font-size: 15px; height: 42px; display: flex; align-items: center; background: var(--surface2); color: var(--text2); padding: 0 16px; border-radius: 8px; border: 1px solid var(--border); white-space: nowrap; }
 .modum-per-section { margin-top: 14px; }
 .modum-per-label { font-size: 17px; font-weight: 500; color: var(--text2); margin-bottom: 10px; }
-.modum-per-list { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.modum-per-list { display: flex; flex-direction: column; gap: 0; }
 .modum-per-row { display: flex; align-items: center; justify-content: space-between; padding: 16px 4px; border-bottom: 1px solid var(--border); }
 .modum-per-name { display: flex; align-items: center; gap: 12px; font-size: 19px; color: var(--text); }
 .modum-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
@@ -94,10 +97,10 @@ textarea.name-input:focus { border-color: var(--accent); }
 
 /* ===== 생성 버튼 (이미지) ===== */
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
-.generate-btn-image { flex: 1; min-height: 140px; margin-top: 14px; padding: 0; border: none; border-radius: var(--radius); overflow: hidden; cursor: pointer; box-shadow: 0 4px 16px rgba(83,74,183,0.25); transition: transform 0.15s, box-shadow 0.15s; background: none; }
+.generate-btn-image { width: 170px; flex-shrink: 0; align-self: stretch; padding: 0; border: none; border-radius: var(--radius); overflow: hidden; cursor: pointer; box-shadow: 0 4px 16px rgba(83,74,183,0.25); transition: transform 0.15s, box-shadow 0.15s; background: none; }
 .generate-btn-image:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(83,74,183,0.35); }
 .generate-btn-image:active { transform: translateY(0); }
-.generate-btn-image img { width: 100%; height: 100%; object-fit: cover; object-position: center 15%; display: block; }
+.generate-btn-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
 
 /* ===== 로딩 오버레이 ===== */
 #loading-overlay { display: none; position: fixed; inset: 0; background: var(--accent); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; gap: 28px; }
@@ -121,6 +124,8 @@ textarea.name-input:focus { border-color: var(--accent); }
 .chalkboard-bar { background: #1e3a30; border-radius: var(--radius-sm); padding: 10px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; color: #7ec8a8; font-size: 15px; flex-wrap: wrap; }
 .chalkboard-dot { width: 10px; height: 10px; border-radius: 50%; background: #4ecb8d; flex-shrink: 0; }
 .modum-grid { display: grid; gap: 10px; }
+.result-overlay { display: none; position: fixed; inset: 0; z-index: 3000; background: var(--bg); padding: 16px 24px; flex-direction: column; overflow-y: auto; }
+.result-overlay.show { display: flex; }
 .history-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .history-section-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .modum-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); opacity: 0; display: flex; flex-direction: column; min-width: 0; }
@@ -191,7 +196,6 @@ textarea.name-input:focus { border-color: var(--accent); }
 /* ===== 숨김 ===== */
 .page { display: none; }
 .page.active { display: block; }
-#inner-fixed { display: none; }
 
 /* ===== 반응형 ===== */
 @media (max-width: 900px) {
@@ -213,6 +217,7 @@ textarea.name-input:focus { border-color: var(--accent); }
   .topbar, .tabbar, .result-actions, .chalkboard-bar, .history-section { display: none !important; }
   .modum-grid { break-inside: avoid; }
   .modum-card, .modum-card.popped { opacity: 1 !important; animation: none !important; transform: none !important; }
+  body:has(#result-overlay.show) .app, body:has(#result-overlay.show) #app-footer { display: none !important; }
   body.multi-print-mode .app, body.multi-print-mode #app-footer { display: none !important; }
   body.multi-print-mode #print-multi { display: block !important; }
   .print-class-block { padding: 12px 24px; page-break-after: always; }
@@ -482,7 +487,7 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
   <!-- 탭바 -->
   <div class="tabbar">
     <button class="tab active" onclick="switchTab('setup',this)"><i class="ti ti-sparkles"></i> 뽑기</button>
-    <button class="tab" onclick="switchTab('result',this)"><i class="ti ti-layout-board"></i> 결과</button>
+    <button class="tab" onclick="switchTab('result',this)"><i class="ti ti-history"></i> 지난 기록</button>
     <div class="tab-spacer"></div>
     <button class="key-btn" onclick="openModal('guide-modal')" title="사용설명서" style="margin-right:6px"><i class="ti ti-help"></i></button>
     <button class="key-btn" onclick="openModal('teacher-modal')" title="선생님 전용"><i class="ti ti-key"></i></button>
@@ -509,47 +514,31 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
 
       <!-- 모둠 설정 -->
       <div class="card">
-        <div class="modum-setting-row">
-          <span class="name-toolbar-label"><i class="ti ti-adjustments-horizontal"></i> 모둠 설정</span>
-          <div class="counter-group">
-            <label>모둠 수</label>
-            <select id="modum-count-val" class="modum-count-select" onchange="changeModumTo(this.value)"></select>
+        <div class="modum-card-layout">
+          <div class="modum-card-main">
+            <div class="modum-setting-row">
+              <span class="name-toolbar-label">모둠 설정</span>
+              <select id="modum-count-val" class="modum-count-select" onchange="changeModumTo(this.value)"></select>
+              <span class="modum-count-suffix">모둠</span>
+              <div class="total-badge" id="total-badge">총 0명 · 6모둠</div>
+            </div>
+            <div class="modum-per-section">
+              <div class="modum-per-label">모둠별 인원수 (개별 설정)</div>
+              <div class="modum-per-list" id="modum-per-list"></div>
+            </div>
           </div>
-          <div class="total-badge" id="total-badge">총 0명 · 6모둠</div>
+          <button class="generate-btn-image" onclick="generateModum()" aria-label="모둠을 뽑아주세요">
+            <img src="images/pick-button.png?v=10" alt="">
+            <span id="generate-btn-text" class="sr-only"></span>
+          </button>
         </div>
-        <div class="modum-per-section">
-          <div class="modum-per-label">모둠별 인원수 (개별 설정)</div>
-          <div class="modum-per-list" id="modum-per-list"></div>
-        </div>
-        <button class="generate-btn-image" onclick="generateModum()" aria-label="모둠을 뽑아주세요">
-          <img src="images/pick-button.png?v=10" alt="">
-          <span id="generate-btn-text" class="sr-only"></span>
-        </button>
       </div>
     </div>
   </div>
 
-  <!-- 결과 탭 -->
+  <!-- 지난 기록 탭 -->
   <div class="page" id="page-result">
-    <div class="chalkboard-bar">
-      <div class="chalkboard-dot"></div>
-      <div id="chalkboard-info">배치 결과가 여기에 표시됩니다.</div>
-    </div>
-    <div class="result-header">
-      <div>
-        <div class="result-title" id="result-title">결과 대기 중</div>
-        <div class="result-meta" id="result-meta"></div>
-      </div>
-      <div class="result-actions">
-        <button class="action-btn" onclick="reshuffleModum()"><i class="ti ti-refresh"></i> 다시 섞기</button>
-        <button class="action-btn" onclick="window.print()"><i class="ti ti-printer"></i> 인쇄</button>
-        <button class="action-btn" onclick="saveAsPng()"><i class="ti ti-download"></i> PNG 저장</button>
-        <button class="action-btn primary" onclick="saveResult()"><i class="ti ti-check"></i> 결과 저장하기</button>
-      </div>
-    </div>
-    <div class="modum-grid" id="modum-grid"></div>
-
-    <div class="history-section">
+    <div class="history-section" style="margin-top:0;padding-top:0;border-top:none;">
       <div class="history-section-title">지난 배치 기록</div>
       <div style="font-size:15px;color:var(--text2);margin-bottom:14px">지난 배치 기록을 참고해 이번 달 모둠이 겹치지 않게 구성됩니다.</div>
       <div id="history-toolbar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -567,11 +556,33 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
   </div>
 </div>
 
+<!-- 모둠 뽑기 결과 전체화면 -->
+<div class="result-overlay" id="result-overlay">
+  <div class="chalkboard-bar">
+    <div class="chalkboard-dot"></div>
+    <div id="chalkboard-info">배치 결과가 여기에 표시됩니다.</div>
+  </div>
+  <div class="result-header">
+    <div>
+      <div class="result-title" id="result-title">결과 대기 중</div>
+      <div class="result-meta" id="result-meta"></div>
+    </div>
+    <div class="result-actions">
+      <button class="action-btn" onclick="reshuffleModum()"><i class="ti ti-refresh"></i> 다시 섞기</button>
+      <button class="action-btn" onclick="window.print()"><i class="ti ti-printer"></i> 인쇄</button>
+      <button class="action-btn" onclick="saveAsPng()"><i class="ti ti-download"></i> PNG 저장</button>
+      <button class="action-btn primary" onclick="saveResult()"><i class="ti ti-check"></i> 결과 저장하기</button>
+      <button class="action-btn" onclick="closeResultOverlay()"><i class="ti ti-x"></i> 닫기</button>
+    </div>
+  </div>
+  <div class="modum-grid" id="modum-grid"></div>
+</div>
+
 <div id="print-multi"></div>
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v4
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v5
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1163,13 +1174,21 @@ function generateModum() {
     state.leaders = new Set();
     overlay.classList.remove('show');
     renderResult(result);
-    // 결과 탭으로 전환
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    const tabs = document.querySelectorAll('.tab');
-    tabs[1].classList.add('active');
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('page-result').classList.add('active');
+    openResultOverlay();
   }, 2200);
+}
+
+function openResultOverlay() {
+  const overlay = document.getElementById('result-overlay');
+  overlay.classList.add('show');
+  document.body.classList.add('result-overlay-open');
+  if (overlay.requestFullscreen) overlay.requestFullscreen().catch(() => {});
+}
+function closeResultOverlay() {
+  const overlay = document.getElementById('result-overlay');
+  overlay.classList.remove('show');
+  document.body.classList.remove('result-overlay-open');
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
 }
 
 function reshuffleModum() {
@@ -1485,16 +1504,11 @@ function viewHistory(classId, year, month) {
   const records = state.history[classId] || [];
   const record = records.find(r => String(r.year) === String(year) && String(r.month) === String(month));
   if (!record) { showToast('기록을 찾을 수 없습니다.', 'error'); return; }
-  closeModal('teacher-modal');
-  // 탭 먼저 전환 후 렌더링
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab')[1].classList.add('active');
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-result').classList.add('active');
   state.currentClassId = classId;
   state.lastResult = record;
   state.leaders = new Set(record.leaders || []);
   renderResult(record);
+  openResultOverlay();
 }
 function deleteHistory(classId, year, month) {
   if (!confirm('이 기록을 삭제할까요?')) return;
@@ -1558,7 +1572,7 @@ function saveAsPng() {
 async function doCapture() {
   // 폰트(Noto Sans KR)가 다 로드되기 전에 캡처하면 시스템 기본 폰트로 얇게 찍히므로 먼저 로딩 완료를 기다림
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
-  const target = document.getElementById('page-result');
+  const target = document.getElementById('result-overlay');
   html2canvas(target, {scale: 2, backgroundColor: '#f4f4f6', useCORS: true}).then(canvas => {
     const a = document.createElement('a');
     const now = new Date();
