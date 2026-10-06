@@ -461,6 +461,7 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
       </div>
       <button onclick="saveGasUrl()" style="width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:18px;font-weight:700;cursor:pointer">저장하고 연결하기</button>
       <button onclick="syncHistoryToGas()" style="width:100%;padding:14px;margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">기존 저장된 기록 구글시트로 동기화</button>
+      <button onclick="restoreFromSheet(false)" style="width:100%;padding:14px;margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">구글시트에서 기록 불러오기</button>
       <div class="info-box" style="margin-top:12px"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:18px"></i> GAS 배포 방법은 함께 제공된 안내서를 참고하세요.</div>
     </div>
   </div>
@@ -1381,6 +1382,104 @@ function saveGasUrl() {
   document.getElementById('gas-status-text').style.color = '#1D9E75';
   closeModal('gas-modal');
   showToast('✅ 구글 시트가 연결되었습니다!', 'success');
+  // 이 기기에 지난 기록이 하나도 없으면(새 컴퓨터) 시트에 기록이 있는지 확인해서 바로 불러오기를 제안
+  const hasAnyHistory = Object.values(state.history || {}).some(list => list && list.length);
+  if (!hasAnyHistory) restoreFromSheet(true);
+}
+
+// 구글 시트('모둠뽑기' 탭)에 저장된 지난 기록을 이 기기로 불러온다.
+// 앱에 이미 있는 기록(같은 반·같은 년/월)은 건드리지 않고, 없는 것만 추가한다.
+async function restoreFromSheet(auto) {
+  if (DEMO_MODE) { showToast('체험 모드에서는 불러올 수 없어요.', 'warning'); return; }
+  if (!state.gasUrl) { showToast('먼저 구글 시트를 연결해 주세요.', 'warning'); return; }
+  showToast('구글 시트에서 기록을 확인하는 중...', 'success');
+  let data;
+  try {
+    data = await Promise.race([
+      jsonpFetch(state.gasUrl + '?action=history'),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20000))
+    ]);
+  } catch (e) {
+    showToast('시트에 연결하지 못했어요. 웹앱 URL(…/exec)과 배포 권한("모든 사용자")을 확인해 주세요.', 'error');
+    return;
+  }
+  if (!data || !Array.isArray(data.records)) {
+    showToast('시트의 앱스스크립트가 예전 버전이에요. Code.gs를 새 버전으로 배포해 주세요.', 'error');
+    return;
+  }
+
+  // 반별로 묶기: 반 이름으로만 찾음 (반 ID는 기기마다 달라서 쓰지 않음). 반 이름이 없는 행은 건너뜀
+  const plan = {};   // className → {cls, records[]}
+  let skipped = 0;
+  data.records.forEach(r => {
+    const name = (r.className || '').trim();
+    if (!name) { skipped++; return; }
+    const cls = state.classes.find(c => c.name === name) || null;
+    const key = cls ? cls.id : 'new:' + name;
+    if (!plan[key]) plan[key] = {cls, name: cls ? cls.name : name, records: []};
+    plan[key].records.push(r);
+  });
+
+  // 같은 반·같은 년/월이 여러 개면 날짜가 가장 늦은 것 하나만
+  const toTime = r => {
+    const m = /(\d+)\D+(\d+)\D+(\d+)/.exec(r.date || '');
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]).getTime() : new Date(r.year, r.month - 1, 1).getTime();
+  };
+  let newCount = 0;
+  Object.values(plan).forEach(p => {
+    const byYM = {};
+    p.records.forEach(r => {
+      const k = r.year + '-' + r.month;
+      if (!byYM[k] || toTime(r) >= toTime(byYM[k])) byYM[k] = r;
+    });
+    p.records = Object.values(byYM).filter(r => {
+      if (!p.cls) return true;
+      return !(state.history[p.cls.id] || []).some(h => h.year === r.year && h.month === r.month);
+    });
+    newCount += p.records.length;
+  });
+
+  if (!newCount) {
+    showToast(auto ? '시트에서 새로 가져올 기록이 없어요.' : '이미 모두 불러와져 있어요. 시트에서 새로 가져올 기록이 없습니다.', 'warning');
+    return;
+  }
+  const classCount = Object.values(plan).filter(p => p.records.length).length;
+  const msg = `구글 시트에서 ${classCount}개 반, 기록 ${newCount}건을 찾았어요.\n앱에 없는 기록만 추가할까요? (기존 기록은 그대로 유지돼요)` +
+              (skipped ? `\n※ 반을 알 수 없는 ${skipped}건은 제외됩니다.` : '');
+  if (!confirm(msg)) return;
+
+  Object.values(plan).forEach(p => {
+    if (!p.records.length) return;
+    let cls = p.cls;
+    if (!cls) {
+      const id = 'c' + Date.now() + '_' + Math.floor(Math.random() * 1e4);
+      cls = {id, name: p.name};
+      state.classes.push(cls);
+    }
+    const sorted = p.records.slice().sort((a, b) => toTime(a) - toTime(b));
+    const list = (state.history[cls.id] || []).slice();
+    sorted.forEach(r => {
+      list.push({
+        month: r.month, year: r.year, date: r.date, savedAt: toTime(r),
+        groups: r.groups, leaders: []
+      });
+    });
+    list.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));
+    state.history[cls.id] = list.slice(-12);
+    // 새로 만든 반(또는 명단이 빈 반)은 가장 최근 기록의 학생들로 명단을 채워 둠
+    if (!cls.students) {
+      const latest = sorted[sorted.length - 1];
+      cls.students = latest.groups.flatMap(g => g.students || []).join('\n');
+      cls.modumCount = latest.groups.length;
+      cls.modumSizes = latest.groups.map(g => (g.maxSize || (g.students || []).length));
+    }
+  });
+  if (!state.currentClassId && state.classes.length) state.currentClassId = state.classes[0].id;
+  saveState();
+  renderAll();
+  updateGenerateBtnText();
+  closeModal('gas-modal');
+  showToast(`✅ 기록 ${newCount}건을 불러왔어요! 지난 기록 탭에서 확인하세요.`, 'success');
 }
 async function sendToGas(action, data, classId) {
   if (DEMO_MODE || !state.gasUrl) return false;

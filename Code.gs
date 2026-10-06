@@ -54,7 +54,56 @@ function doGet(e) {
     const marker = e.parameter.marker || '';
     return respond({status:'ok', students: getRosterInfo(marker)});
   }
+  if (action === 'history') {
+    return respond({status:'ok', records: getAllHistory()});
+  }
   return respond({status:'ok', message:'모둠뽑기 GAS 작동 중'});
+}
+
+// ===== 전체 기록 내려주기 (새 컴퓨터에서 기록 복원용) =====
+// '모둠뽑기' 시트의 모든 기록을 반 이름과 함께 돌려준다.
+// 반 이름은 '모둠뽑기_보기' 시트에서 (년도·월·모둠별 학생)이 똑같은 행을 찾아 알아낸다.
+function getAllHistory() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const main = ss.getSheetByName(SHEET_NAME);
+  if (!main) return [];
+  const rows = main.getDataRange().getValues();
+
+  // 보기 시트: 서명(년|월|1모둠|2모둠|...) → 반 이름
+  const nameBySig = {};
+  const detail = ss.getSheetByName(SHEET_DETAIL);
+  if (detail) {
+    const last = getResultLastRow(detail);
+    if (last > 1) {
+      detail.getRange(2, 1, last-1, 9).getValues().forEach(function(r) {
+        if (r[0] === '') return;
+        nameBySig[[r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8]].join('|')] = String(r[0]);
+      });
+    }
+  }
+
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (r[0] === '' || r[4] === '') continue;
+    let groups;
+    try { groups = JSON.parse(r[4]); } catch (err) { continue; }
+    if (!Array.isArray(groups)) continue;
+    const parts = [r[1], r[2]];
+    for (let g = 0; g < 6; g++) parts.push(groups[g] && groups[g].students ? groups[g].students.join(', ') : '');
+    const date = (r[3] instanceof Date)
+      ? Utilities.formatDate(r[3], 'Asia/Seoul', 'yyyy. M. d.')
+      : String(r[3]);
+    out.push({
+      classId: String(r[0]),
+      className: nameBySig[parts.join('|')] || '',
+      year: Number(r[1]),
+      month: Number(r[2]),
+      date: date,
+      groups: groups
+    });
+  }
+  return out;
 }
 
 // ===== 기록 저장 =====
