@@ -23,6 +23,8 @@ table { width: 100%; border-collapse: collapse; font-size: 16px; }
 th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
 th { color: var(--text2); font-weight: 500; }
 button { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; }
+button + button { margin-top: 10px; }
+button.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); font-size: 16px; font-weight: 600; }
 button:disabled { background: #b9b6d8; cursor: default; }
 #msg { margin-top: 12px; line-height: 1.7; font-weight: 500; }
 .ok { color: var(--ok); } .warn { color: var(--warn); }
@@ -31,22 +33,27 @@ button:disabled { background: #b9b6d8; cursor: default; }
 <body>
 <div class="wrap">
   <h1>💾 모둠뽑기 기록 백업</h1>
-  <p class="sub">이 페이지는 <strong>로그인이나 클라우드 연결 없이</strong>, 이 컴퓨터에 저장된 모둠뽑기 기록(반, 명단, 지난 기록)을 읽어서 파일로 저장해요. 이 컴퓨터의 기록은 바뀌지 않아요.</p>
+  <p class="sub">이 페이지는 <strong>로그인이나 클라우드 연결 없이</strong>, 이 컴퓨터에 저장된 모둠뽑기 기록(반, 명단, 지난 기록)을 읽어서 <strong>구글 시트로 보내요</strong>. 이 컴퓨터의 기록은 바뀌지 않아요.</p>
 
   <div class="card" id="summary">불러오는 중...</div>
 
-  <button id="save-btn" onclick="downloadBackup()" disabled>백업 파일로 저장하기</button>
+  <div id="gas-box" class="card" style="display:none">
+    <label for="gas-url" style="display:block;font-size:15px;color:var(--text2);margin-bottom:6px">구글 시트 웹앱 주소 (…/exec)</label>
+    <input id="gas-url" style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:15px;background:var(--surface2)" placeholder="https://script.google.com/macros/s/.../exec">
+  </div>
+  <button id="send-btn" onclick="sendToSheet()" disabled>구글 시트로 보내기</button>
+  <button id="save-btn" class="secondary" onclick="downloadBackup()" disabled>백업 파일로 저장하기 (예비용)</button>
   <div id="msg"></div>
 
   <div class="card notice" style="margin-top:20px">
     <strong>다음 순서</strong><br>
-    1. 저장된 백업 파일(<code>모둠뽑기_백업_날짜.json</code>)을 USB·메일·구글 드라이브로 새 컴퓨터에 옮겨요.<br>
-    2. 새 컴퓨터의 모둠뽑기 앱에서 <strong>구글 시트 연결 → 백업 파일 가져오기</strong>를 눌러 이 파일을 골라요.<br>
+    1. 위 표에 기록과 명단이 다 있는지 확인하고 <strong>구글 시트로 보내기</strong>를 눌러요.<br>
+    2. 새 컴퓨터의 모둠뽑기 앱에서 <strong>구글 시트 연결 → 구글시트에서 백업 가져오기</strong>를 눌러요.<br>
     3. 가져오기가 끝나기 전에는 이 컴퓨터에서 모둠뽑기 앱(로그인된 상태)을 열지 마세요.
   </div>
 </div>
 <script>
-let raw = null;
+let raw = null, summaryText = '';
 
 function esc(s) {
   return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -70,6 +77,10 @@ function render() {
     const months = list.length ? list.map(r => `${r.year % 100}.${r.month}월`).join(', ') : '-';
     return `<tr><td><strong>${esc(c.name)}</strong></td><td>${studentCount}명</td><td>${esc(months)}</td></tr>`;
   }).join('');
+  summaryText = `반 ${state.classes.length}개, 기록 ${total}건`;
+  document.getElementById('gas-url').value = state.gasUrl || '';
+  document.getElementById('gas-box').style.display = state.gasUrl ? 'none' : 'block';
+  document.getElementById('send-btn').disabled = false;
   box.innerHTML = `<div style="margin-bottom:10px">반 <strong>${state.classes.length}개</strong>, 지난 기록 <strong>${total}건</strong>이 있어요.</div>
     <table><thead><tr><th>반</th><th>명단</th><th>저장된 기록</th></tr></thead><tbody>${rows}</tbody></table>`;
   document.getElementById('save-btn').disabled = false;
@@ -88,6 +99,54 @@ function downloadBackup() {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   document.getElementById('msg').innerHTML = '<span class="ok">✅ 백업 파일을 저장했어요. 다운로드 폴더를 확인해 주세요.</span>';
+}
+
+function setMsg(html) { document.getElementById('msg').innerHTML = html; }
+
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = '__cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+    const sc = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, 30000);
+    const cleanup = () => { clearTimeout(timer); delete window[cb]; sc.remove(); };
+    window[cb] = data => { cleanup(); resolve(data); };
+    sc.onerror = () => { cleanup(); reject(new Error('jsonp 실패')); };
+    sc.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.body.appendChild(sc);
+  });
+}
+
+async function sendToSheet() {
+  const url = document.getElementById('gas-url').value.trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) {
+    document.getElementById('gas-box').style.display = 'block';
+    setMsg('<span class="warn">구글 시트 웹앱 주소(…/exec)를 입력해 주세요.</span>');
+    return;
+  }
+  const btn = document.getElementById('send-btn');
+  btn.disabled = true;
+  const id = 'b' + Date.now();
+  const savedAt = new Date().toLocaleString('ko-KR');
+  setMsg('구글 시트로 보내는 중...');
+  try {
+    await fetch(url, {
+      method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'backup', data: {id, savedAt, summary: summaryText, state: JSON.parse(raw)}})
+    });
+    // 보내기 결과는 직접 볼 수 없어서, 시트에서 최신 백업을 다시 읽어 확인
+    setMsg('잘 들어갔는지 확인하는 중...');
+    const res = await jsonp(url + '?action=backup');
+    if (res && res.backup && res.backup.id === id) {
+      setMsg(`<span class="ok">✅ 구글 시트로 보냈어요! (${savedAt}, ${summaryText})<br>이제 새 컴퓨터의 모둠뽑기 앱에서 <strong>구글시트에서 백업 가져오기</strong>를 눌러 주세요.</span>`);
+    } else if (res && !('backup' in res)) {
+      setMsg('<span class="warn">구글 시트의 앱스스크립트가 예전 버전이라 백업을 받을 수 없어요. 새 버전으로 배포한 뒤 다시 눌러 주세요.</span>');
+    } else {
+      setMsg('<span class="warn">보냈지만 시트에서 확인되지 않았어요. 잠시 뒤 다시 눌러 주세요. 계속 안 되면 아래 [백업 파일로 저장하기]를 써 주세요.</span>');
+    }
+  } catch (e) {
+    setMsg('<span class="warn">구글 시트에 연결하지 못했어요. 인터넷 연결과 웹앱 주소를 확인해 주세요.</span>');
+  }
+  btn.disabled = false;
 }
 
 render();

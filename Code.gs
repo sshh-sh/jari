@@ -22,6 +22,7 @@ function doPost(e) {
     else if (action === 'load') result = loadRecords(classId);
     else if (action === 'bulkSetRoster') result = bulkSetRoster(payload.marker, payload.records);
     else if (action === 'createClassRoster') result = createClassRoster(payload.marker, payload.records);
+    else if (action === 'backup') result = saveBackup(payload);
     else result = {success: false, message: '알 수 없는 액션'};
 
     return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
@@ -56,6 +57,9 @@ function doGet(e) {
   }
   if (action === 'history') {
     return respond({status:'ok', records: getAllHistory()});
+  }
+  if (action === 'backup') {
+    return respond({status:'ok', backup: getLatestBackup()});
   }
   return respond({status:'ok', message:'모둠뽑기 GAS 작동 중'});
 }
@@ -104,6 +108,58 @@ function getAllHistory() {
     });
   }
   return out;
+}
+
+// ===== 앱 전체 백업 (다른 컴퓨터로 옮기기용) =====
+// '모둠뽑기_백업' 시트에 [백업ID, 저장시각, 요약, 조각번호, 조각수, 내용] 행으로 저장한다.
+// 셀 하나에 5만 자까지만 들어가서 내용을 조각내 여러 행에 나눠 담고, 최근 백업 5개만 남긴다.
+const SHEET_BACKUP = '모둠뽑기_백업';
+const BACKUP_CHUNK = 40000;
+const BACKUP_KEEP  = 5;
+
+function saveBackup(payload) {
+  if (!payload || !payload.id || !payload.state) return {success: false, message: '백업 내용 없음'};
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_BACKUP);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_BACKUP);
+    sheet.getRange(1,1,1,6).setValues([['백업ID','저장시각','요약','조각번호','조각수','내용']]);
+    sheet.getRange(1,1,1,6).setFontWeight('bold').setBackground('#534AB7').setFontColor('white');
+    sheet.setFrozenRows(1);
+  }
+  const json = JSON.stringify({id: payload.id, savedAt: payload.savedAt, summary: payload.summary, state: payload.state});
+  const total = Math.ceil(json.length / BACKUP_CHUNK);
+  const rows = [];
+  for (let i = 0; i < total; i++) {
+    // 조각이 '='·숫자 등으로 시작하면 시트가 수식/숫자로 바꿔 버리므로 앞에 '§'를 붙여 항상 글자로 저장
+    rows.push([String(payload.id), String(payload.savedAt || ''), String(payload.summary || ''), i + 1, total,
+               '§' + json.slice(i * BACKUP_CHUNK, (i + 1) * BACKUP_CHUNK)]);
+  }
+  sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, 6).setValues(rows);
+
+  // 오래된 백업 정리 (최근 BACKUP_KEEP개만)
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().map(r => String(r[0]));
+  const ids = [];
+  data.forEach(id => { if (ids.indexOf(id) < 0) ids.push(id); });
+  const removeIds = ids.slice(0, Math.max(0, ids.length - BACKUP_KEEP));
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (removeIds.indexOf(data[i]) >= 0) sheet.deleteRow(i + 2);
+  }
+  return {success: true, message: '백업 저장 완료'};
+}
+
+function getLatestBackup() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_BACKUP);
+  if (!sheet || sheet.getLastRow() < 2) return null;
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
+  const lastId = String(rows[rows.length - 1][0]);
+  const parts = rows.filter(r => String(r[0]) === lastId).sort((a, b) => a[3] - b[3]);
+  if (!parts.length || parts.length !== Number(parts[0][4])) return null;
+  try {
+    return JSON.parse(parts.map(r => String(r[5]).replace(/^§/, '')).join(''));
+  } catch (err) {
+    return null;
+  }
 }
 
 // ===== 기록 저장 =====
