@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>모둠뽑기 백업</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f4f4f6; --surface: #ffffff; --surface2: #f0f0f3; --border: #e2e2e8;
+  --text: #1a1a2e; --text2: #6b6b80; --accent: #534AB7; --accent-light: #EEEDFE;
+  --ok: #0F6E56; --warn: #854F0B;
+  font-family: 'Noto Sans KR', sans-serif; font-size: 17px;
+}
+body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 24px 16px; }
+.wrap { max-width: 760px; margin: 0 auto; }
+h1 { font-size: 28px; margin-bottom: 8px; }
+.sub { color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+.notice { background: var(--accent-light); border-color: #d6d3fb; line-height: 1.8; }
+table { width: 100%; border-collapse: collapse; font-size: 16px; }
+th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--text2); font-weight: 500; }
+button { width: 100%; padding: 16px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; }
+button:disabled { background: #b9b6d8; cursor: default; }
+#msg { margin-top: 12px; line-height: 1.7; font-weight: 500; }
+.ok { color: var(--ok); } .warn { color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>💾 모둠뽑기 기록 백업</h1>
+  <p class="sub">이 페이지는 <strong>로그인이나 클라우드 연결 없이</strong>, 이 컴퓨터에 저장된 모둠뽑기 기록(반, 명단, 지난 기록)을 읽어서 파일로 저장해요. 이 컴퓨터의 기록은 바뀌지 않아요.</p>
+
+  <div class="card" id="summary">불러오는 중...</div>
+
+  <button id="save-btn" onclick="downloadBackup()" disabled>백업 파일로 저장하기</button>
+  <div id="msg"></div>
+
+  <div class="card notice" style="margin-top:20px">
+    <strong>다음 순서</strong><br>
+    1. 저장된 백업 파일(<code>모둠뽑기_백업_날짜.json</code>)을 USB·메일·구글 드라이브로 새 컴퓨터에 옮겨요.<br>
+    2. 새 컴퓨터의 모둠뽑기 앱에서 <strong>구글 시트 연결 → 백업 파일 가져오기</strong>를 눌러 이 파일을 골라요.<br>
+    3. 가져오기가 끝나기 전에는 이 컴퓨터에서 모둠뽑기 앱(로그인된 상태)을 열지 마세요.
+  </div>
+</div>
+<script>
+let raw = null;
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function render() {
+  const box = document.getElementById('summary');
+  try { raw = localStorage.getItem('modum_state'); } catch (e) { raw = null; }
+  let state = null;
+  try { state = raw ? JSON.parse(raw) : null; } catch (e) { state = null; }
+  if (!state || !Array.isArray(state.classes) || !state.classes.length) {
+    box.innerHTML = '<span class="warn">이 컴퓨터(이 브라우저)에는 저장된 모둠뽑기 기록이 없어요.<br>평소 모둠뽑기를 쓰던 브라우저(크롬, 엣지 등)로 이 페이지를 열었는지 확인해 주세요.</span>';
+    return;
+  }
+  const history = state.history || {};
+  let total = 0;
+  const rows = state.classes.map(c => {
+    const list = (history[c.id] || []).slice().sort((a, b) => (a.year - b.year) || (a.month - b.month));
+    total += list.length;
+    const studentCount = (c.students || '').split('\n').map(s => s.trim()).filter(Boolean).length;
+    const months = list.length ? list.map(r => `${r.year % 100}.${r.month}월`).join(', ') : '-';
+    return `<tr><td><strong>${esc(c.name)}</strong></td><td>${studentCount}명</td><td>${esc(months)}</td></tr>`;
+  }).join('');
+  box.innerHTML = `<div style="margin-bottom:10px">반 <strong>${state.classes.length}개</strong>, 지난 기록 <strong>${total}건</strong>이 있어요.</div>
+    <table><thead><tr><th>반</th><th>명단</th><th>저장된 기록</th></tr></thead><tbody>${rows}</tbody></table>`;
+  document.getElementById('save-btn').disabled = false;
+}
+
+function downloadBackup() {
+  if (!raw) return;
+  const d = new Date();
+  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const blob = new Blob([JSON.stringify({type: 'jari-backup', version: 1, exportedAt: d.toISOString(), state: JSON.parse(raw)})], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `모둠뽑기_백업_${ymd}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  document.getElementById('msg').innerHTML = '<span class="ok">✅ 백업 파일을 저장했어요. 다운로드 폴더를 확인해 주세요.</span>';
+}
+
+render();
+</script>
+</body>
+</html>

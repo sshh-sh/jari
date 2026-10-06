@@ -462,6 +462,8 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
       <button onclick="saveGasUrl()" style="width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:18px;font-weight:700;cursor:pointer">저장하고 연결하기</button>
       <button onclick="syncHistoryToGas()" style="width:100%;padding:14px;margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">기존 저장된 기록 구글시트로 동기화</button>
       <button onclick="restoreFromSheet(false)" style="width:100%;padding:14px;margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">구글시트에서 기록 불러오기</button>
+      <button onclick="document.getElementById('backup-file-input').click()" style="width:100%;padding:14px;margin-top:10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer">백업 파일 가져오기 (다른 컴퓨터의 기록 통째로 옮기기)</button>
+      <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none" onchange="importBackupFile(this.files[0]); this.value=''">
       <div class="info-box" style="margin-top:12px"><i class="ti ti-info-circle" style="flex-shrink:0;font-size:18px"></i> GAS 배포 방법은 함께 제공된 안내서를 참고하세요.</div>
     </div>
   </div>
@@ -1408,11 +1410,25 @@ async function restoreFromSheet(auto) {
     return;
   }
 
-  // 반별로 묶기: 반 이름으로만 찾음 (반 ID는 기기마다 달라서 쓰지 않음). 반 이름이 없는 행은 건너뜀
+  // 반 이름이 빠진 행은, 시트 안에서 같은 반 ID를 가진 다른 행의 반 이름을 빌려 씀
+  // (그 ID에 붙은 이름이 딱 하나일 때만. 이 기기의 반 ID와는 비교하지 않음)
+  const namesById = {};
+  data.records.forEach(r => {
+    const n = (r.className || '').trim();
+    if (n && r.classId) (namesById[r.classId] = namesById[r.classId] || new Set()).add(n);
+  });
+  const nameOf = r => {
+    const n = (r.className || '').trim();
+    if (n) return n;
+    const s = namesById[r.classId];
+    return s && s.size === 1 ? [...s][0] : '';
+  };
+
+  // 반별로 묶기: 반 이름으로만 찾음 (반 ID는 기기마다 달라서 쓰지 않음). 반 이름을 알 수 없는 행은 건너뜀
   const plan = {};   // className → {cls, records[]}
   let skipped = 0;
   data.records.forEach(r => {
-    const name = (r.className || '').trim();
+    const name = nameOf(r);
     if (!name) { skipped++; return; }
     const cls = state.classes.find(c => c.name === name) || null;
     const key = cls ? cls.id : 'new:' + name;
@@ -1480,6 +1496,62 @@ async function restoreFromSheet(auto) {
   updateGenerateBtnText();
   closeModal('gas-modal');
   showToast(`✅ 기록 ${newCount}건을 불러왔어요! 지난 기록 탭에서 확인하세요.`, 'success');
+}
+
+// 다른 컴퓨터에서 backup.html로 저장한 백업 파일을 가져온다.
+// 반·명단·모둠 설정·지난 기록을 백업 파일 것으로 바꾸고, 이 기기에만 있던 같은 반의 다른 달 기록은 남겨 둔다.
+async function importBackupFile(file) {
+  if (!file) return;
+  if (DEMO_MODE) { showToast('체험 모드에서는 가져올 수 없어요.', 'warning'); return; }
+  if (window._fbUser && document.getElementById('login-btn-text').textContent === '동기화 중') {
+    showToast('클라우드 동기화가 끝난 뒤에 다시 눌러 주세요.', 'warning'); return;
+  }
+  let b;
+  try {
+    const parsed = JSON.parse(await file.text());
+    b = parsed && parsed.type === 'jari-backup' ? parsed.state : parsed;
+  } catch (e) { b = null; }
+  if (!b || !Array.isArray(b.classes) || !b.classes.length) {
+    showToast('모둠뽑기 백업 파일이 아니에요. backup.html에서 저장한 파일을 골라 주세요.', 'error'); return;
+  }
+
+  const bHistory = b.history || {};
+  const classes = JSON.parse(JSON.stringify(b.classes));
+  const history = {};
+  let total = 0, kept = 0;
+  classes.forEach(c => {
+    const list = (bHistory[c.id] || []).slice();
+    const mine = state.classes.find(x => x.name === c.name);
+    if (mine) {
+      (state.history[mine.id] || []).forEach(h => {
+        if (!list.some(r => r.year === h.year && r.month === h.month)) { list.push(h); kept++; }
+      });
+    }
+    list.sort((x, y) => (x.year - y.year) || (x.month - y.month) || ((x.savedAt || 0) - (y.savedAt || 0)));
+    history[c.id] = list.slice(-12);
+    total += history[c.id].length;
+  });
+  const dropped = state.classes.filter(c => !classes.some(x => x.name === c.name)).map(c => c.name);
+
+  const msg = `백업 파일: 반 ${classes.length}개, 지난 기록 ${total}건\n` +
+              `이 컴퓨터의 반·명단·기록을 백업 파일 내용으로 바꿀까요?` +
+              (kept ? `\n※ 이 컴퓨터에만 있던 기록 ${kept}건은 남겨 둬요.` : '') +
+              (dropped.length ? `\n※ 백업에 없는 반은 사라져요: ${dropped.join(', ')}` : '');
+  if (!confirm(msg)) return;
+
+  state.classes = classes;
+  state.history = history;
+  if (Array.isArray(b.modumSizes)) state.modumSizes = b.modumSizes;
+  if (b.modumCount) state.modumCount = b.modumCount;
+  if (Array.isArray(b.fixedStudents)) state.fixedStudents = b.fixedStudents;
+  if (!state.gasUrl && b.gasUrl) state.gasUrl = b.gasUrl;
+  state.currentClassId = classes.some(c => c.id === b.currentClassId) ? b.currentClassId : classes[0].id;
+  state.lastResult = null;
+  saveState();
+  renderAll();
+  updateGenerateBtnText();
+  closeModal('gas-modal');
+  showToast(`✅ 백업을 가져왔어요! (반 ${classes.length}개, 기록 ${total}건)`, 'success');
 }
 async function sendToGas(action, data, classId) {
   if (DEMO_MODE || !state.gasUrl) return false;
