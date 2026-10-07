@@ -504,29 +504,12 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
       <input id="gas-url-input" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:15px;color:var(--text);background:var(--surface2);outline:none;margin-bottom:10px" placeholder="https://script.google.com/macros/s/..." />
       <button onclick="saveGasUrl()" style="width:100%;padding:14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:18px;font-weight:700;cursor:pointer">저장하고 연결하기</button>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-        <button onclick="syncHistoryToGas()" style="border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:12px;"><i class="ti ti-arrow-up"></i> 시트로 보내기</button>
-        <button onclick="restoreFromSheet(false)" style="border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:12px;"><i class="ti ti-arrow-down"></i> 시트에서 가져오기</button>
+        <button onclick="sendAllToSheet()" style="border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:12px;"><i class="ti ti-arrow-up"></i> 시트로 보내기</button>
+        <button onclick="restoreBackupFromSheet()" style="border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:12px;"><i class="ti ti-arrow-down"></i> 시트에서 가져오기</button>
       </div>
       <div style="font-size:14px;color:var(--text2);text-align:center;margin-top:14px">
-        <a href="#" onclick="closeModal('gas-modal');openModal('restore-modal');return false" style="color:var(--text2)">다른 컴퓨터로 옮기기 / 복원</a>
-        &nbsp;·&nbsp; <a href="guide.html" target="_blank" style="color:var(--text2)">배포 안내서</a>
+        <a href="guide.html" target="_blank" style="color:var(--text2)">배포 안내서</a>
       </div>
-      <input type="file" id="backup-file-input" accept=".json,application/json" style="display:none" onchange="importBackupFile(this.files[0]); this.value=''">
-    </div>
-  </div>
-</div>
-
-<!-- 다른 컴퓨터로 옮기기 / 복원 -->
-<div class="modal-backdrop" id="restore-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title"><i class="ti ti-device-laptop"></i> 다른 컴퓨터로 옮기기 / 복원</div>
-      <button class="modal-close" onclick="closeModal('restore-modal')"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="modal-body">
-      <div style="font-size:14px;color:#7a5600;background:#fff6d6;border-radius:8px;padding:10px 12px;margin-bottom:12px;line-height:1.6">⚠ 이 컴퓨터의 기록이 바뀔 수 있어요. 누르면 확인창이 한 번 더 떠요.</div>
-      <button onclick="closeModal('restore-modal');restoreBackupFromSheet()" style="width:100%;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:12px;margin-bottom:10px">다른 컴퓨터의 기록 통째로 옮기기<br><span style="font-size:13px;font-weight:400">시트에 보낸 백업으로 복원</span></button>
-      <button onclick="document.getElementById('backup-file-input').click()" style="width:100%;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;padding:12px;">백업 파일에서 복원<br><span style="font-size:13px;font-weight:400">내려받아 둔 파일 선택</span></button>
     </div>
   </div>
 </div>
@@ -663,7 +646,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v24
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v25
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1765,7 +1748,7 @@ async function restoreBackupFromSheet() {
     showToast('시트에 연결하지 못했어요. 웹앱 URL과 배포 권한을 확인해 주세요.', 'error'); return;
   }
   if (!data || !('backup' in data)) { showToast('시트의 앱스스크립트가 예전 버전이에요. Code.gs를 새 버전으로 배포해 주세요.', 'error'); return; }
-  if (!data.backup || !data.backup.state) { showToast('시트에 백업이 없어요. 다른 컴퓨터에서 backup.html의 [구글 시트로 보내기]를 먼저 눌러 주세요.', 'warning'); return; }
+  if (!data.backup || !data.backup.state) { showToast('시트에 백업이 없어요. 자료가 있는 컴퓨터에서 [시트로 보내기]를 먼저 눌러 주세요.', 'warning'); return; }
   applyBackup(data.backup.state, `구글 시트 백업 (${data.backup.savedAt || '시각 모름'} 보냄)`);
 }
 
@@ -1846,6 +1829,43 @@ async function sendToGas(action, data, classId) {
     console.warn('GAS 저장 실패:', e);
     return false;
   }
+}
+function countState(st) {
+  const h = (st && st.history) || {};
+  return { classes: ((st && st.classes) || []).length, records: Object.values(h).reduce((a, l) => a + (l || []).length, 0) };
+}
+async function sendAllToSheet() {
+  if (DEMO_MODE) { showToast('체험 모드에서는 보낼 수 없어요.', 'warning'); return; }
+  if (!state.gasUrl) { showToast('먼저 구글 시트를 연결해 주세요.', 'warning'); return; }
+  if (window._fbUser && document.getElementById('login-btn-text').textContent === '동기화 중') {
+    showToast('클라우드 동기화가 끝난 뒤에 다시 눌러 주세요.', 'warning'); return;
+  }
+  saveCurrentStudents();
+  const mine = countState(state);
+  showToast('시트의 기존 백업을 확인하는 중...', 'success');
+  let sheet = null;
+  try {
+    const data = await Promise.race([jsonpFetch(state.gasUrl + '?action=backup'), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 30000))]);
+    if (data && data.backup && data.backup.state) sheet = countState(data.backup.state);
+  } catch (e) {
+    if (!confirm('시트의 기존 백업을 확인하지 못했어요. 그래도 이 컴퓨터의 자료를 보낼까요?')) return;
+  }
+  if (sheet && (mine.records < sheet.records || mine.classes < sheet.classes)) {
+    if (!confirm(`⚠ 시트에는 반 ${sheet.classes}개·기록 ${sheet.records}건이 있는데, 이 컴퓨터에는 반 ${mine.classes}개·기록 ${mine.records}건뿐이에요.\n보내면 시트의 백업이 이 컴퓨터 자료로 바뀌어요. 그래도 보낼까요?`)) return;
+  }
+  const snapshot = JSON.parse(JSON.stringify(state));
+  delete snapshot.lastResult; delete snapshot.rosterStars;
+  const id = 'b' + Date.now();
+  const savedAt = new Date().toLocaleString('ko-KR');
+  const summary = `반 ${mine.classes}개, 기록 ${mine.records}건`;
+  showToast('시트로 보내는 중...', 'success');
+  try {
+    await fetch(state.gasUrl, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action: 'backup', data: {id, savedAt, summary, state: snapshot}}) });
+    const res = await jsonpFetch(state.gasUrl + '?action=backup');
+    if (!(res && res.backup && res.backup.id === id)) { showToast('보냈지만 시트에서 확인하지 못했어요. 시트 앱스스크립트가 최신 버전인지 확인해 주세요.', 'warning'); return; }
+  } catch (e) { showToast('시트로 보내지 못했어요. 인터넷 연결과 웹앱 URL을 확인해 주세요.', 'error'); return; }
+  showToast(`✅ 시트로 보냈어요! (${summary})`, 'success');
+  syncHistoryToGas();
 }
 async function syncHistoryToGas() {
   if (!state.gasUrl) { showToast('먼저 구글 시트를 연결해 주세요.', 'warning'); return; }
