@@ -160,7 +160,10 @@ textarea.name-input:focus { border-color: var(--accent); }
 .history-name { font-size: 17px; font-weight: 500; color: var(--text); }
 .history-detail { font-size: 14px; color: var(--text2); margin-top: 2px; }
 .history-view-btn { font-size: 15px; color: var(--accent); background: none; border: 1px solid #AFA9EC; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-family: inherit; flex: 1; }
-#history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; align-items: start; }
+#history-list { display: flex; flex-direction: column; gap: 22px; }
+.history-grade-title { font-size: 20px; font-weight: 800; color: var(--accent); margin-bottom: 10px; }
+.history-grade-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.history-grade-row .history-class-block { width: 270px; }
 .history-class-block { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .history-class-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: var(--surface2); border: none; cursor: pointer; font-family: inherit; text-align: left; }
 .history-class-header:disabled { cursor: default; opacity: .55; }
@@ -595,7 +598,7 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v8
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v9
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1636,7 +1639,15 @@ function renderHistory() {
     return r.year * 100 + r.month;
   };
 
-  list.innerHTML = state.classes.map(cls => {
+  const parseClass = c => {
+    const g = /(\d+)\s*학년/.exec(c.name), n = /(\d+)\s*반/.exec(c.name);
+    return { grade: g ? +g[1] : 99, num: n ? +n[1] : 99, label: g && n ? n[1] + '반' : c.name };
+  };
+  const sortedClasses = state.classes.map(c => ({ cls: c, ...parseClass(c) }))
+    .sort((a, b) => a.grade - b.grade || a.num - b.num);
+  const grades = [...new Set(sortedClasses.map(x => x.grade))];
+
+  const cardHtml = ({ cls, label }) => {
     const records = (state.history[cls.id] || []).slice().sort((a, b) => recordSortKey(b) - recordSortKey(a));
     const hasRecords = records.length > 0;
     const rowsHtml = records.map(r => `
@@ -1656,12 +1667,18 @@ function renderHistory() {
     return `<div class="history-class-block">
       <button class="history-class-header" onclick="toggleHistoryClass(this)" ${hasRecords ? '' : 'disabled'}>
         <i class="ti ti-chevron-right"></i>
-        <span class="history-class-name">${cls.name}</span>
+        <span class="history-class-name">${label}</span>
         <span class="history-class-badge">${hasRecords ? records.length + '건' : '기록 없음'}</span>
       </button>
       <div class="history-class-body">${rowsHtml}</div>
     </div>`;
-  }).join('');
+  };
+
+  list.innerHTML = grades.map(g => `
+    <div class="history-grade-group">
+      <div class="history-grade-title">${g === 99 ? '기타' : g + '학년'}</div>
+      <div class="history-grade-row">${sortedClasses.filter(x => x.grade === g).map(cardHtml).join('')}</div>
+    </div>`).join('');
 }
 function toggleHistoryClass(btn) {
   btn.closest('.history-class-block').classList.toggle('expanded');
