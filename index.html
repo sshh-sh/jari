@@ -155,11 +155,12 @@ textarea.name-input:focus { border-color: var(--accent); }
 .modal-title i { color: var(--accent); font-size: 22px; }
 .modal-close { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 26px; display: flex; padding: 2px; }
 .modal-body { padding: 22px 26px; overflow-y: auto; }
-.history-row { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.history-row { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 .history-row:last-child { border-bottom: none; }
 .history-name { font-size: 17px; font-weight: 500; color: var(--text); }
-.history-detail { font-size: 14px; color: var(--text2); margin-top: 2px; }
-.history-view-btn { font-size: 15px; color: var(--accent); background: none; border: 1px solid #AFA9EC; padding: 6px 10px; border-radius: 8px; cursor: pointer; font-family: inherit; flex: 1; }
+.history-detail { flex: 1; font-size: 14px; color: var(--text2); white-space: nowrap; }
+.history-view-btn { font-size: 13px; color: var(--accent); background: none; border: 1px solid #AFA9EC; padding: 3px 9px; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.history-del-btn { font-size: 13px; color: #e05a2b; background: none; border: 1px solid #e05a2b; padding: 3px 9px; border-radius: 6px; cursor: pointer; font-family: inherit; }
 #history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; align-items: start; }
 .history-class-block { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
 .history-class-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: var(--surface2); border: none; cursor: pointer; font-family: inherit; text-align: left; }
@@ -619,7 +620,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 390px) / 1.5); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v13
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v14
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1714,17 +1715,15 @@ function renderHistory() {
       <div class="history-row">
         <label style="display:flex;align-items:center;gap:10px;min-width:0;cursor:pointer;">
           <input type="checkbox" class="history-check" data-classid="${cls.id}" data-year="${r.year}" data-month="${r.month}" style="width:16px;height:16px;flex-shrink:0;cursor:pointer;">
-          <div style="min-width:0;">
-            <div class="history-name">${r.month}월 배치기록</div>
-            <div class="history-detail">${r.groups.length}모둠 · ${r.groups.reduce((a,g)=>a+g.students.length,0)}명 · ${r.date}</div>
-          </div>
+          <div class="history-name">${r.month}월 배치기록</div>
         </label>
         <div style="display:flex;gap:6px;align-items:center;">
+          <span class="history-detail">${(m => m ? m[2] + '월 ' + m[3] + '일' : r.date)(/(\d+)\D+(\d+)\D+(\d+)/.exec(r.date || ''))}</span>
           <button class="history-view-btn" onclick="viewHistory('${cls.id}',${r.year},${r.month})">보기</button>
-          <button onclick="deleteHistory('${cls.id}',${r.year},${r.month})" style="flex:1;background:none;border:1px solid #e05a2b;color:#e05a2b;padding:6px 10px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit">삭제</button>
+          <button class="history-del-btn" onclick="deleteHistory('${cls.id}',${r.year},${r.month})">삭제</button>
         </div>
       </div>`).join('');
-    return `<div class="history-class-block">
+    return `<div class="history-class-block${historyCollapsed.has(cls.id) ? '' : ' expanded'}" data-classid="${cls.id}">
       <button class="history-class-header" onclick="toggleHistoryClass(this)" ${hasRecords ? '' : 'disabled'}>
         <i class="ti ti-chevron-right"></i>
         <span class="history-class-name">${label}</span>
@@ -1736,8 +1735,11 @@ function renderHistory() {
 
   list.innerHTML = sortedClasses.map(cardHtml).join('');
 }
+const historyCollapsed = new Set();
 function toggleHistoryClass(btn) {
-  btn.closest('.history-class-block').classList.toggle('expanded');
+  const blk = btn.closest('.history-class-block');
+  blk.classList.toggle('expanded');
+  if (blk.classList.contains('expanded')) historyCollapsed.delete(blk.dataset.classid); else historyCollapsed.add(blk.dataset.classid);
 }
 function toggleAllHistoryCheck(checked) {
   document.querySelectorAll('.history-check').forEach(cb => cb.checked = checked);
