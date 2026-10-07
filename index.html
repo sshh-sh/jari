@@ -334,6 +334,27 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
   </div>
 </div>
 
+<!-- 지난 기록 직접 입력 모달 -->
+<div class="modal-backdrop" id="manual-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="ti ti-pencil-plus"></i> 지난 기록 직접 입력</div>
+      <button class="modal-close" onclick="closeModal('manual-modal')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
+        <select id="manual-class" class="modum-count-select" style="font-size:16px"></select>
+        <select id="manual-year" class="modum-count-select" style="font-size:16px"></select>
+        <select id="manual-month" class="modum-count-select" style="font-size:16px"></select>
+        <select id="manual-count" class="modum-count-select" style="font-size:16px" onchange="renderManualGroups()"></select>
+      </div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:10px;">모둠마다 이름을 한 줄에 한 명씩 적어 주세요. 같은 반·같은 달 기록이 있으면 덮어써요.</div>
+      <div id="manual-groups" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;"></div>
+      <button onclick="saveManualRecord()" style="width:100%;margin-top:14px;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:16px;font-weight:700;cursor:pointer">이 기록 저장하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 반 관리 모달 -->
 <div class="modal-backdrop" id="class-modal">
   <div class="modal">
@@ -559,7 +580,10 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
           <input type="checkbox" id="history-select-all" onchange="toggleAllHistoryCheck(this.checked)" style="width:16px;height:16px;cursor:pointer;">
           전체 선택
         </label>
-        <button onclick="printSelectedHistory()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent);padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit"><i class="ti ti-printer"></i> 선택 인쇄</button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="openManualRecord()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text);background:var(--surface);border:1px solid var(--border);padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit"><i class="ti ti-pencil-plus"></i> 기록 직접 입력</button>
+          <button onclick="printSelectedHistory()" style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--accent);background:var(--accent-light);border:1px solid var(--accent);padding:7px 14px;border-radius:8px;cursor:pointer;font-family:inherit"><i class="ti ti-printer"></i> 선택 인쇄</button>
+        </div>
       </div>
       <div id="history-list">
         <div style="font-size:16px;color:var(--text2);text-align:center;padding:24px">저장된 기록이 없습니다.</div>
@@ -595,7 +619,7 @@ body.demo-mode #page-setup.active { height: calc(100vh - 262px); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v11
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v12
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1367,6 +1391,48 @@ function saveResult() {
   if (state.gasUrl) sendToGas('save', {...record, className: cls ? cls.name : state.currentClassId, leaders});
   renderHistory();
   showToast(DEMO_MODE ? '✅ 저장되었습니다! (체험 모드라 새로고침하면 사라져요)' : '✅ 저장되었습니다!', 'success');
+}
+
+/* 지난 기록 직접 입력 (사라진 기록을 손으로 다시 넣을 때) */
+function openManualRecord() {
+  const now = new Date();
+  const opt = (v, t, sel) => `<option value="${v}"${sel ? ' selected' : ''}>${t}</option>`;
+  document.getElementById('manual-class').innerHTML = state.classes.map(c => opt(c.id, c.name, c.id === state.currentClassId)).join('');
+  document.getElementById('manual-year').innerHTML = [now.getFullYear() - 1, now.getFullYear()].map(y => opt(y, y + '년', y === now.getFullYear())).join('');
+  document.getElementById('manual-month').innerHTML = Array.from({length: 12}, (_, i) => opt(i + 1, (i + 1) + '월', i === now.getMonth())).join('');
+  document.getElementById('manual-count').innerHTML = Array.from({length: 19}, (_, i) => opt(i + 2, (i + 2) + '모둠', i + 2 === state.modumCount)).join('');
+  renderManualGroups();
+  openModal('manual-modal');
+}
+function renderManualGroups() {
+  const n = +document.getElementById('manual-count').value;
+  const box = document.getElementById('manual-groups');
+  const old = [...box.querySelectorAll('textarea')].map(t => t.value);
+  box.innerHTML = Array.from({length: n}, (_, i) => `
+    <div><div style="font-size:14px;font-weight:700;margin-bottom:4px;color:${COLOR_HEX[i % COLOR_HEX.length]}">${i + 1}모둠</div>
+    <textarea rows="5" style="width:100%;border:1px solid var(--border);border-radius:8px;padding:8px;font-family:inherit;font-size:15px;resize:vertical">${old[i] || ''}</textarea></div>`).join('');
+}
+function saveManualRecord() {
+  const classId = document.getElementById('manual-class').value;
+  const year = +document.getElementById('manual-year').value, month = +document.getElementById('manual-month').value;
+  const groups = [...document.querySelectorAll('#manual-groups textarea')].map((t, i) => {
+    const students = t.value.split('\n').map(s => s.trim()).filter(Boolean);
+    return { idx: i, name: `${i + 1}모둠`, maxSize: students.length, students };
+  });
+  if (!groups.some(g => g.students.length)) { showToast('이름을 한 명 이상 입력해 주세요.', 'warning'); return; }
+  const list = state.history[classId] || (state.history[classId] = []);
+  const idx = list.findIndex(r => r.year === year && r.month === month);
+  if (idx >= 0 && !confirm(`${year}년 ${month}월 기록이 이미 있어요. 덮어쓸까요?`)) return;
+  const record = { year, month, date: new Date(year, month - 1, 1).toLocaleDateString('ko-KR'), savedAt: Date.now(), groups, leaders: [] };
+  if (idx >= 0) list[idx] = record; else list.push(record);
+  list.sort((a, b) => (a.year - b.year) || (a.month - b.month));
+  state.history[classId] = list.slice(-12);
+  saveState();
+  const cls = state.classes.find(c => c.id === classId);
+  if (state.gasUrl) sendToGas('save', {...record, className: cls ? cls.name : classId, leaders: []}, classId);
+  renderHistory();
+  closeModal('manual-modal');
+  showToast('✅ 기록을 저장했어요!', 'success');
 }
 
 /* ====================================================
