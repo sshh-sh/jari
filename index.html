@@ -157,19 +157,19 @@ textarea.name-input:focus { border-color: var(--accent); }
 .modal-body { padding: 22px 26px; overflow-y: auto; }
 .history-row { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 9px 0; border-bottom: 1px solid var(--border); }
 .history-row:last-child { border-bottom: none; }
-.history-name { font-size: 17px; font-weight: 500; color: var(--text); }
-.history-detail { flex: 1; font-size: 14px; color: var(--text2); white-space: nowrap; }
-.history-view-btn { font-size: 13px; color: var(--accent); background: none; border: 1px solid #AFA9EC; padding: 3px 9px; border-radius: 6px; cursor: pointer; font-family: inherit; }
-.history-del-btn { font-size: 13px; color: #e05a2b; background: none; border: 1px solid #e05a2b; padding: 3px 9px; border-radius: 6px; cursor: pointer; font-family: inherit; }
-#history-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; align-items: start; }
+.history-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.history-detail { flex: 1; font-size: 10px; color: var(--text2); white-space: nowrap; }
+.history-view-btn { font-size: 10px; color: var(--accent); background: none; border: 1px solid #AFA9EC; padding: 1px 5px; border-radius: 4px; cursor: pointer; font-family: inherit; }
+.history-del-btn { font-size: 10px; color: #e05a2b; background: none; border: 1px solid #e05a2b; padding: 1px 5px; border-radius: 4px; cursor: pointer; font-family: inherit; }
+#history-list { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; align-items: start; }
 .history-class-block { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-.history-class-header { width: 100%; display: flex; align-items: center; gap: 8px; padding: 14px 16px; background: var(--surface2); border: none; cursor: pointer; font-family: inherit; text-align: left; }
+.history-class-header { width: 100%; display: flex; align-items: center; gap: 4px; padding: 10px 8px; background: var(--surface2); border: none; cursor: pointer; font-family: inherit; text-align: left; }
 .history-class-header:disabled { cursor: default; opacity: .55; }
 .history-class-header i.ti-chevron-right { transition: transform 0.15s; color: var(--text2); font-size: 16px; flex-shrink: 0; }
 .history-class-block.expanded .history-class-header i.ti-chevron-right { transform: rotate(90deg); }
-.history-class-name { font-size: 17px; font-weight: 700; color: var(--text); white-space: nowrap; }
-.history-class-badge { font-size: 14px; color: var(--text2); background: var(--surface); border-radius: 10px; padding: 3px 10px; flex-shrink: 0; }
-.history-class-body { display: none; padding: 0 16px; }
+.history-class-name { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.history-class-badge { font-size: 10px; color: var(--text2); background: var(--surface); border-radius: 8px; padding: 1px 5px; flex-shrink: 0; }
+.history-class-body { display: none; padding: 0 8px; }
 .history-class-block.expanded .history-class-body { display: block; }
 .info-box { margin-top: 14px; padding: 13px 16px; background: var(--surface2); border-radius: var(--radius-sm); font-size: 17px; color: var(--text2); display: flex; gap: 9px; }
 .fixed-table { width: 100%; border-collapse: collapse; font-size: 17px; margin-bottom: 14px; }
@@ -544,7 +544,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 350px) / 1.3); }
           </div>
           <span id="name-count" style="display:none">0명</span>
         </div>
-        <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()"></textarea>
+        <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()" onblur="formatNameInput()"></textarea>
       </div>
 
       <!-- 모둠 설정 -->
@@ -620,7 +620,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 350px) / 1.3); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v17
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v18
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -858,6 +858,7 @@ function renderAll() {
   // 저장된 명렬표 불러오기 (명단이 없는 반이면 비워야 이전 반 명단이 딸려오지 않음)
   const cls = getCurrentClass();
   document.getElementById('name-input').value = (cls && cls.students) || '';
+  formatNameInput();
   updateCount();
   updateTotalBadge();
 }
@@ -958,6 +959,11 @@ function saveCurrentStudents() {
 function getStudents() {
   return document.getElementById('name-input').value
     .split(/[\n\t,，]+/).map(s => s.trim()).filter(s => s.length > 0);
+}
+function formatNameInput() {
+  const el = document.getElementById('name-input');
+  const names = getStudents();
+  if (names.length) el.value = names.join(', ');
 }
 function updateCount() {
   const n = getStudents().length;
@@ -1718,7 +1724,7 @@ function renderHistory() {
           <div class="history-name">${r.month}월 배치기록</div>
         </label>
         <div style="display:flex;gap:6px;align-items:center;">
-          <span class="history-detail">${(m => m ? m[2] + '월 ' + m[3] + '일' : r.date)(/(\d+)\D+(\d+)\D+(\d+)/.exec(r.date || ''))}</span>
+          <span class="history-detail">${(m => m ? m[2] + '/' + m[3] : r.date)(/(\d+)\D+(\d+)\D+(\d+)/.exec(r.date || ''))}</span>
           <button class="history-view-btn" onclick="viewHistory('${cls.id}',${r.year},${r.month})">보기</button>
           <button class="history-del-btn" onclick="deleteHistory('${cls.id}',${r.year},${r.month})">삭제</button>
         </div>
