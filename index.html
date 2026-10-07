@@ -414,7 +414,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
           <div style="min-width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">2</div>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">학생 이름 입력</div>
-            <div style="font-size:14px;color:var(--text2);">왼쪽 칸에 이름을 <strong>한 줄에 한 명씩</strong> 입력하세요.<br>엑셀(CSV)에서 복사해서 붙여넣기도 되고, <strong>일괄입력</strong>의 ↓(양식 다운로드)·↑(명단 업로드) 버튼으로 파일을 바로 올릴 수도 있어요.</div>
+            <div style="font-size:14px;color:var(--text2);">왼쪽 칸에 이름을 <strong>한 줄에 한 명씩</strong>, 또는 <strong>쉼표(,)·탭으로 이어서</strong> 입력하세요. 칸 밖을 누르면 "김가영, 김민성, …"처럼 가로로 정리돼요.<br>엑셀에서 복사해 붙여넣기도 되고, <strong>일괄입력</strong>의 ↓(양식 다운로드)·↑(명단 업로드) 버튼으로 파일을 올릴 수도 있어요.</div>
           </div>
         </div>
 
@@ -422,7 +422,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
           <div style="min-width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">3</div>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">모둠 뽑기</div>
-            <div style="font-size:14px;color:var(--text2);"><strong>모둠을 뽑아주세요!</strong> 그림 버튼을 누르면 자동으로 배치되고, 결과가 <strong>전체화면</strong>으로 뜹니다. 지난 기록을 참고해 겹침을 최소화해요.</div>
+            <div style="font-size:14px;color:var(--text2);"><strong>모둠을 뽑아주세요!</strong> 그림 버튼을 누르면 <strong>5초 카운트다운</strong> 뒤 대포 소리와 함께 이름이 슬롯머신처럼 돌다가 한 줄씩 공개되고, 마지막 줄은 뜸을 들여 공개돼요. 끝나면 결과가 <strong>전체화면</strong>으로 뜹니다. 지난 기록을 참고해 겹침을 최소화해요. 중간에 오른쪽 아래 <strong>건너뛰기</strong>로 바로 결과를 볼 수 있어요.</div>
           </div>
         </div>
 
@@ -430,7 +430,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
           <div style="min-width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">4</div>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">모둠장 지정 (선택)</div>
-            <div style="font-size:14px;color:var(--text2);">전체화면 결과 화면에서 학생 이름을 클릭하면 <strong>⭐ 모둠장</strong>으로 지정됩니다.</div>
+            <div style="font-size:14px;color:var(--text2);">전체화면 결과 화면에서 학생 이름을 클릭하면 <strong>⭐ 모둠장</strong>으로 지정됩니다. 구글 시트가 연결돼 있으면 이름 옆에 모둠장을 한 횟수만큼 노란 ★, 매니저는 파란 ★이 표시돼요.</div>
           </div>
         </div>
 
@@ -438,7 +438,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
           <div style="min-width:28px;height:28px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">5</div>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">결과 저장</div>
-            <div style="font-size:14px;color:var(--text2);">전체화면 결과 상단의 <strong>저장하기</strong>를 누르면 기록이 보관됩니다. <strong>닫기</strong>를 누르면 원래 화면으로 돌아가요.</div>
+            <div style="font-size:14px;color:var(--text2);">전체화면 결과 상단의 <strong>저장하기</strong>를 누르면 기록이 보관됩니다. 마음에 안 들면 <strong>다시 섞기</strong>, 끝나면 <strong>닫기</strong>로 원래 화면으로 돌아가요.</div>
           </div>
         </div>
 
@@ -446,7 +446,15 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
           <i class="ti ti-history" style="color:var(--accent);font-size:22px;margin-top:2px;flex-shrink:0;"></i>
           <div>
             <div style="font-size:16px;font-weight:700;color:var(--accent-dark);margin-bottom:3px;">지난 기록 탭</div>
-            <div style="font-size:14px;color:var(--accent-dark);">반별로 지난 배치 기록을 확인·삭제하고, 체크박스로 여러 건을 골라 한 번에 인쇄할 수 있습니다.</div>
+            <div style="font-size:14px;color:var(--accent-dark);">반별 카드마다 "N월 배치기록"이 나열되고, <strong>보기</strong>로 그때 결과를 다시 보거나 <strong>삭제</strong>할 수 있어요. 카드 위 화살표로 접고 펼쳐요. 체크박스로 여러 건을 골라 <strong>인쇄</strong>하거나 <strong>JPG 저장</strong>(파일이름 규칙은 칸에서 바꿀 수 있어요, 기본 "모둠배치-3학년1반9월")할 수 있고, 사라진 기록은 <strong>기록 직접 입력</strong>으로 손수 다시 넣을 수 있습니다.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:14px;align-items:flex-start;padding:12px 14px;background:var(--accent-light);border-radius:var(--radius-sm);border:1px solid var(--accent);">
+          <i class="ti ti-volume" style="color:var(--accent);font-size:22px;margin-top:2px;flex-shrink:0;"></i>
+          <div>
+            <div style="font-size:16px;font-weight:700;color:var(--accent-dark);margin-bottom:3px;">소리 버튼</div>
+            <div style="font-size:14px;color:var(--accent-dark);">탭 줄 오른쪽의 스피커 버튼으로 뽑기 효과음(북소리·대포·슬롯·팡파르)을 끄고 켤 수 있어요.</div>
           </div>
         </div>
 
@@ -465,7 +473,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
             <i class="ti ti-brand-google" style="color:#4285F4;font-size:22px;margin-top:2px;flex-shrink:0;"></i>
             <div>
               <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">구글 로그인</div>
-              <div style="font-size:14px;color:var(--text2);">오른쪽 위 <strong>구글 로그인</strong> 배지로 로그인하면 기록이 구글 계정에 저장되어 <strong>다른 기기에서도 동일하게 사용</strong>할 수 있어요.</div>
+              <div style="font-size:14px;color:var(--text2);">오른쪽 위 <strong>구글 로그인</strong> 배지로 로그인하면 기록이 구글 계정에 저장되어 <strong>다른 기기에서도 동일하게 사용</strong>할 수 있어요. 새 컴퓨터에서는 배지가 <strong>동기화 완료</strong>로 바뀐 뒤에 사용하세요.</div>
             </div>
           </div>
 
@@ -643,7 +651,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v22
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v23
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1258,26 +1266,36 @@ const sfx = (() => {
   return {
     unlock() { ready(); },
     drum(level = 2) {
-      const c = ready(); if (!c) return; const t = c.currentTime, k = 0.7 + level * 0.15;
+      const c = ready(); if (!c) return; const t = c.currentTime, k = 0.75 + level * 0.12;
       const o = c.createOscillator(), g = c.createGain();
-      o.frequency.setValueAtTime(120 + level * 18, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.3);
-      g.gain.setValueAtTime(Math.min(1.6, k * 1.3), t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-      o.connect(g).connect(master); o.start(t); o.stop(t + 0.55);
-      const n = noise(c, 0.2), f = c.createBiquadFilter(), ng = c.createGain();
-      f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.8;
-      ng.gain.setValueAtTime(0.55 * k, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      o.type = 'triangle'; o.frequency.setValueAtTime(260 + level * 25, t); o.frequency.exponentialRampToValueAtTime(110, t + 0.12);
+      g.gain.setValueAtTime(Math.min(1.5, k * 1.2), t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+      o.connect(g).connect(master); o.start(t); o.stop(t + 0.25);
+      const n = noise(c, 0.1), f = c.createBiquadFilter(), ng = c.createGain();
+      f.type = 'highpass'; f.frequency.value = 1500;
+      ng.gain.setValueAtTime(0.7 * k, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
       n.connect(f).connect(ng).connect(master); n.start(t);
+    },
+    whistle() {
+      const c = ready(); if (!c) return; const t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(500, t); o.frequency.exponentialRampToValueAtTime(2600, t + 0.8);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.7); g.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+      o.connect(g).connect(master); o.start(t); o.stop(t + 0.9);
     },
     cannon() {
       const c = ready(); if (!c) return; const t = c.currentTime;
+      const crack = noise(c, 0.25), hp = c.createBiquadFilter(), cg = c.createGain();
+      hp.type = 'highpass'; hp.frequency.value = 1200;
+      cg.gain.setValueAtTime(2, t); cg.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      crack.connect(hp).connect(cg).connect(master); crack.start(t);
       const o = c.createOscillator(), og = c.createGain();
-      o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(28, t + 0.8);
-      og.gain.setValueAtTime(1.6, t); og.gain.exponentialRampToValueAtTime(0.001, t + 1);
-      o.connect(og).connect(master); o.start(t); o.stop(t + 1.1);
-      const n = noise(c, 1.3), f = c.createBiquadFilter(), ng = c.createGain();
-      f.type = 'lowpass'; f.frequency.setValueAtTime(4000, t); f.frequency.exponentialRampToValueAtTime(120, t + 0.9);
-      ng.gain.setValueAtTime(1.3, t); ng.gain.exponentialRampToValueAtTime(0.001, t + 1.1);
-      n.connect(f).connect(ng).connect(master); n.start(t);
+      o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(24, t + 1.2);
+      og.gain.setValueAtTime(1.8, t); og.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+      o.connect(og).connect(master); o.start(t); o.stop(t + 1.6);
+      const r = noise(c, 2), lp = c.createBiquadFilter(), rg = c.createGain();
+      lp.type = 'lowpass'; lp.frequency.setValueAtTime(900, t); lp.frequency.exponentialRampToValueAtTime(70, t + 1.8);
+      rg.gain.setValueAtTime(1.2, t); rg.gain.exponentialRampToValueAtTime(0.001, t + 1.9);
+      r.connect(lp).connect(rg).connect(master); r.start(t);
     },
     click() {
       const c = ready(); if (!c) return; const t = c.currentTime, o = c.createOscillator(), g = c.createGain();
@@ -1337,6 +1355,7 @@ function playDrawShow(result, students) {
   const bump = () => { cnt.classList.remove('draw-shake'); void cnt.offsetWidth; cnt.classList.add('draw-shake'); };
   bump(); sfx.drum(1);
   [4, 3, 2, 1].forEach((n, i) => drawAfter((i + 1) * 1000, () => { cnt.textContent = String(n); bump(); sfx.drum([1, 2, 3, 4][i]); }));
+  drawAfter(4150, () => sfx.whistle());
   drawAfter(5000, () => {
     sfx.cannon();
     stage.innerHTML = '<div class="draw-cols" id="draw-cols" style="grid-template-columns:repeat(' + groups.length + ',minmax(0,1fr))"></div>';
@@ -1346,15 +1365,26 @@ function playDrawShow(result, students) {
     const cells = [...cols.querySelectorAll('.draw-cell.spin')];
     drawTimers.push(setInterval(() => { let any = false; cells.forEach(c => { if (c.classList.contains('spin')) { c.textContent = rnd(); any = true; } }); if (any) sfx.click(); }, 70));
     const stop = (g, r) => { const c = cols.querySelector('.draw-cell[data-g="' + g + '"][data-r="' + r + '"]'); if (c) { c.textContent = groups[g].students[r]; c.classList.remove('spin'); c.classList.add('done'); } };
-    // 마지막 줄이 아닌 줄: 모둠 전체가 줄 단위로 한꺼번에
-    for (let r = 0; r < maxLen - 1; r++) drawAfter(1000 + r * 1000, () => { groups.forEach((g, gi) => stop(gi, r)); sfx.lock(); });
-    // 마지막 줄: 모둠별로 점점 길게 뜸
-    let t = 1000 + (maxLen - 1) * 1000 + 300;
+    // 줄마다 몇 칸이 있는지 세서, 2칸 이상인 마지막 줄을 "천천히 공개하는 줄"로 삼는다 (맨 아래가 1칸뿐이면 그 전 줄이 담당)
+    const rowCount = Array.from({length: maxLen}, (_, r) => groups.filter(g => g.students[r] !== undefined).length);
+    let slowRow = maxLen - 1;
+    while (slowRow > 0 && rowCount[slowRow] < 2) slowRow--;
+    // 그 앞 줄들: 모둠 전체가 줄 단위로 한꺼번에
+    for (let r = 0; r < slowRow; r++) drawAfter(1000 + r * 1000, () => { groups.forEach((g, gi) => stop(gi, r)); sfx.lock(); });
+    // 천천히 공개하는 줄: 모둠별로 점점 길게 뜸
+    let t = 1000 + slowRow * 1000 + 300, n = 0;
     groups.forEach((g, gi) => {
-      t += Math.min(1500, 900 + gi * 250);
+      if (g.students[slowRow] === undefined) return;
+      t += Math.min(1500, 900 + n++ * 250);
       const at = t;
-
-      drawAfter(at, () => { stop(gi, maxLen - 1); sfx.lock(); });
+      drawAfter(at, () => { stop(gi, slowRow); sfx.lock(); });
+    });
+    // 그 아래 혼자 남은 칸들: 맨 마지막에 하나씩 가장 길게 뜸
+    for (let r = slowRow + 1; r < maxLen; r++) groups.forEach((g, gi) => {
+      if (g.students[r] === undefined) return;
+      t += 2200;
+      const at = t;
+      drawAfter(at, () => { stop(gi, r); sfx.lock(); });
     });
     drawAfter(t, () => sfx.fanfare());
     drawAfter(t + 1300, () => finishDrawShow(result));
