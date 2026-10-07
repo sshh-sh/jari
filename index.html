@@ -34,7 +34,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 6px 0; }
 .logo { display: flex; align-items: center; gap: 14px; cursor: pointer; }
 .logo-dice { font-size: 60px; line-height: 1; }
-.logo-title { font-size: 48px; font-weight: 700; color: var(--text); white-space: nowrap; }
+.logo-title { font-size: 42px; font-weight: 700; color: var(--text); white-space: nowrap; }
 .logo-sub { font-size: 17px; color: var(--text2); margin-top: 3px; }
 .class-selector { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 22px; font-size: 17px; color: var(--text); cursor: pointer; box-shadow: var(--shadow); position: relative; }
 .class-selector select { border: none; background: none; font-family: inherit; font-size: 17px; color: var(--text); cursor: pointer; outline: none; padding-right: 4px; }
@@ -57,7 +57,7 @@ body:has(#page-result.active) #app-footer { display: none; }
 #page-setup.active { display: flex; flex-direction: column; height: calc((100vh - 300px) / 1.3); }
 .setup-grid { display: grid; grid-template-columns: 520px 1fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
 .setup-grid > .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-textarea.name-input { width: 100%; flex: 1; min-height: 0; max-height: none; overflow-y: auto; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 17px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); resize: vertical; line-height: 2.2; outline: none; transition: border-color 0.15s; }
+textarea.name-input { width: 100%; flex: 1 1 0; height: 0; min-height: 0; max-height: none; overflow-y: scroll; resize: none; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 18px; font-size: 24px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); line-height: 1.9; outline: none; transition: border-color 0.15s; }
 textarea.name-input:focus { border-color: var(--accent); }
 .name-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin-bottom: 14px; }
 .name-toolbar-label { font-size: 17px; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
@@ -68,7 +68,7 @@ textarea.name-input:focus { border-color: var(--accent); }
 .toolbar-btn.accent { color: var(--accent); background: var(--surface); border-color: var(--accent); }
 .toolbar-btn.accent:hover { background: var(--accent-light); }
 .toolbar-divider { width: 1px; height: 22px; background: var(--border); margin: 0 2px; }
-.class-select-btn { height: 32px; border: 2px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent-light); color: var(--accent-dark); font-family: inherit; font-size: 9px; font-weight: 700; padding: 0 6px; outline: none; cursor: pointer; flex-shrink: 0; max-width: 150px; }
+.class-select-btn { height: 46px; border: 2px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent-light); color: var(--accent-dark); font-family: inherit; font-size: 17px; font-weight: 700; padding: 0 8px; outline: none; cursor: pointer; flex-shrink: 0; max-width: 170px; }
 .bulk-io-group { display: flex; align-items: stretch; height: 32px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface2); flex-shrink: 0; }
 .bulk-io-label { display: flex; align-items: center; padding: 0 6px; font-size: 9px; color: var(--text); white-space: nowrap; }
 .bulk-io-btn { display: flex; align-items: center; justify-content: center; width: 32px; border: none; border-left: 1px solid var(--border); background: var(--surface2); color: var(--accent); cursor: pointer; font-size: 16px; margin: 0; }
@@ -227,13 +227,13 @@ textarea.name-input:focus { border-color: var(--accent); }
 }
 
 /* ===== 로그인 ===== */
-.login-btn { display: flex; align-items: center; height: 38px; gap: 6px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.login-btn { display: flex; align-items: center; height: 32px; gap: 6px; padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 9px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
 .login-btn:hover { border-color: var(--accent); background: var(--accent-light); }
 .login-btn.logged-in { background: var(--accent-light); border-color: var(--accent); color: var(--accent-dark); }
 .login-avatar { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #fff; background: var(--accent); flex-shrink: 0; overflow: hidden; }
 .login-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .login-btn:not(.logged-in) .login-avatar { background: transparent; }
-.gas-status-pill { display: flex; align-items: center; height: 38px; gap: 6px; padding: 0 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 16px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.gas-status-pill { display: flex; align-items: center; height: 32px; gap: 6px; padding: 0 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 9px; font-weight: 600; font-family: inherit; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
 .gas-status-pill:hover { border-color: var(--accent); background: var(--accent-light); }
 /* ===== 개인정보 모달 ===== */
 #privacy-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:2000; align-items:center; justify-content:center; padding:20px; }
@@ -620,7 +620,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 350px) / 1.3); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v16
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v17
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -957,7 +957,7 @@ function saveCurrentStudents() {
 ==================================================== */
 function getStudents() {
   return document.getElementById('name-input').value
-    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
+    .split(/[\n\t,，]+/).map(s => s.trim()).filter(s => s.length > 0);
 }
 function updateCount() {
   const n = getStudents().length;
