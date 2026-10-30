@@ -668,7 +668,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v29
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v30
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -785,8 +785,9 @@ function buildDemoState() {
 /* ====================================================
    저장/불러오기 (Firebase 우선, 없으면 localStorage)
 ==================================================== */
-function saveState() {
+function saveState(keepTime) {
   if (DEMO_MODE) return; // 체험 모드: 브라우저·Firebase 어디에도 저장 안 함
+  if (!keepTime) state.updatedAt = Date.now(); // 어느 컴퓨터의 자료가 더 최신인지 가리는 용도
   localStorage.setItem('modum_state', JSON.stringify(state));
   if (window._fbUser) {
     const data = JSON.parse(JSON.stringify(state));
@@ -806,8 +807,14 @@ async function loadFromFirebase(uid) {
   try {
     const data = await window._fb.load(uid);
     if (data && data.classes && data.classes.length) {
+      // 이 컴퓨터 자료가 클라우드보다 더 최신이고 줄어든 게 없으면 클라우드로 덮어쓰지 않고 오히려 클라우드를 갱신
+      const localT = state.updatedAt || 0, cloudT = data.updatedAt || 0;
+      if (cloudT > 0 && localT > cloudT) {
+        const mine = countState(state), theirs = countState(data);
+        if (mine.classes >= theirs.classes && mine.records >= theirs.records) { saveState(true); return; }
+      }
       Object.assign(state, data);
-      saveState(); // localStorage에도 동기화
+      saveState(true); // localStorage에도 동기화 (클라우드 시각 그대로 유지)
       renderAll();
       updateGenerateBtnText();
     }
@@ -882,7 +889,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // 로그인된 상태면 Firebase에서 기존 데이터를 아직 불러오는 중일 수 있으므로
     // 여기서 저장하면 로그인 전 생성된 빈 기본 학급으로 클라우드 데이터를 덮어쓸 위험이 있음.
     // 로그인 안 된 경우에만 바로 저장하고, 로그인된 경우는 loadFromFirebase 완료 후 자연스럽게 저장되게 둠.
-    if (!window._fbUser) saveState();
+    if (!window._fbUser) saveState(true);
   }
   if (!state.currentClassId) state.currentClassId = state.classes[0].id;
   populateModumCountSelect();
@@ -908,6 +915,7 @@ function renderAll() {
   const cls = getCurrentClass();
   document.getElementById('name-input').value = (cls && cls.students) || '';
   formatNameInput();
+  document.getElementById('name-input').scrollTop = 0;
   updateCount();
   updateTotalBadge();
 }
@@ -1012,7 +1020,7 @@ function getStudents() {
 function formatNameInput() {
   const el = document.getElementById('name-input');
   const names = getStudents();
-  if (names.length) el.value = names.join(', ');
+  if (names.length) { el.value = names.join(', '); el.scrollTop = 0; }
 }
 function updateCount() {
   const n = getStudents().length;
