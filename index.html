@@ -56,7 +56,7 @@ body:has(#page-result.active) #app-footer { display: none; }
 /* ===== 설정 탭 ===== */
 #page-setup.active { display: flex; flex-direction: column; height: calc((100vh - 312px) / 1.3); }
 .setup-grid { display: grid; grid-template-columns: 400px 1fr; gap: 18px; margin-bottom: 14px; flex: 1; align-items: stretch; min-height: 0; overflow-y: auto; }
-.setup-grid > .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.setup-grid > .card { display: flex; flex-direction: column; min-height: 0; overflow: hidden; overflow: clip; }
 textarea.name-input { width: 100%; flex: 1 1 0; height: 0; min-height: 0; max-height: none; overflow-y: scroll; resize: none; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 18px; font-size: 30px; font-family: 'Noto Sans KR', sans-serif; color: var(--text); line-height: 1.8; word-break: keep-all; overflow-wrap: normal; outline: none; transition: border-color 0.15s; }
 textarea.name-input:focus { border-color: var(--accent); }
 .name-toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; margin-bottom: 14px; }
@@ -590,7 +590,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
           </div>
           <span id="name-count" style="display:none">0명</span>
         </div>
-        <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()" onblur="formatNameInput()"></textarea>
+        <textarea class="name-input" id="name-input" placeholder="이름을 한 줄에 한 명씩 붙여넣기&#10;&#10;예)&#10;김민준&#10;이서연&#10;박지호&#10;..." oninput="updateCount()" onblur="formatNameInput()" onpaste="setTimeout(resetNameScroll, 0)"></textarea>
       </div>
 
       <!-- 모둠 설정 -->
@@ -668,7 +668,7 @@ body.demo-mode #page-setup.active { height: calc((100vh - 362px) / 1.3); }
 
 <footer id="app-footer" style="text-align:center;padding:10px;font-size:13px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px;">
   <i class="ti ti-dice-5" style="font-size:16px;vertical-align:-2px;margin-right:6px;color:var(--accent)"></i>
-  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v5
+  © 2026 모둠뽑기 · 개발 최송희. 무단 복제 및 배포를 금지합니다. · v6
   <button class="demo-btn" onclick="startDemo()" title="가상 데이터로 로그인 없이 체험해 보기"><i class="ti ti-player-play"></i> 로그인 없이 체험하기</button>
 </footer>
 
@@ -1020,7 +1020,13 @@ function getStudents() {
 function formatNameInput() {
   const el = document.getElementById('name-input');
   const names = getStudents();
-  if (names.length) { el.value = names.join(', '); el.scrollTop = 0; }
+  if (names.length) { el.value = names.join(', '); }
+  resetNameScroll();
+}
+function resetNameScroll() {
+  const el = document.getElementById('name-input');
+  el.scrollTop = 0;
+  for (let p = el.parentElement; p; p = p.parentElement) { if (p.scrollTop) p.scrollTop = 0; }
 }
 function updateCount() {
   const n = getStudents().length;
